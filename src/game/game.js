@@ -23,13 +23,13 @@ Game.prototype = {
 	},
 
 	update: function() {
-		this.GUI.stats.ms.begin();
-		this.GUI.stats.mb.begin();
-		this.GUI.stats.fps.begin();
+		this.GUI.MS.begin();
+		this.GUI.MS.begin();
+		this.GUI.FPS.begin();
 		requestAnimationFrame(this.update.bind(this));
-		this.GUI.stats.fps.end();
-		this.GUI.stats.mb.end();
-		this.GUI.stats.ms.end();
+		this.GUI.FPS.end();
+		this.GUI.MS.end();
+		this.GUI.MS.end();
 	}
 };
 

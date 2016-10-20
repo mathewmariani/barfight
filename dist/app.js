@@ -46,31 +46,71 @@ Game.prototype = {
 	},
 
 	update: function() {
-		this.GUI.stats.ms.begin();
-		this.GUI.stats.mb.begin();
-		this.GUI.stats.fps.begin();
+		this.GUI.MS.begin();
+		this.GUI.MS.begin();
+		this.GUI.FPS.begin();
 		requestAnimationFrame(this.update.bind(this));
-		this.GUI.stats.fps.end();
-		this.GUI.stats.mb.end();
-		this.GUI.stats.ms.end();
+		this.GUI.FPS.end();
+		this.GUI.MS.end();
+		this.GUI.MS.end();
 	}
 };
 
 module.exports = Game;
 
-},{"../gui/gui.js":3}],3:[function(require,module,exports){
+},{"../gui/gui.js":4}],3:[function(require,module,exports){
 'use strict';
+
+/**
+ * FPS constructor
+ */
+var FPS = function() {
+
+	this.stats = null;
+
+	// self initialize
+	this.initialize();
+};
+
+FPS.prototype = {
+	initialize: function() {
+		this.stats = new Stats();
+
+		this.stats.showPanel(0);
+
+		this.stats.domElement.style.position = 'relative';
+		this.stats.domElement.style.bottom = '0px';
+		this.stats.domElement.style.right = '0px';
+
+		document.body.appendChild(this.stats.domElement);
+	},
+
+	begin: function() {
+		this.stats.begin();
+	},
+
+	end: function() {
+		this.stats.end();
+	}
+};
+
+module.exports = FPS;
+
+},{}],4:[function(require,module,exports){
+'use strict';
+
+var FPS = require('../gui/fps.js');
+var MS = require('../gui/ms.js');
+var MB = require('../gui/mb.js');
 
 /**
  * GUI constructor
  */
 var GUI = function() {
 
-	this.stats = {
-		fps: null,
-		ms: null,
-		mb: null
-	};
+	this.FPS = null;
+	this.MS = null;
+	this.MB = null;
 
 	// self initialize
 	this.initialize();
@@ -78,37 +118,88 @@ var GUI = function() {
 
 GUI.prototype = {
 	initialize: function() {
-		this.initializeStats();
+		this.FPS = new FPS();
+		this.MS = new MS();
+		this.MB = new MB();
 	},
-
-	initializeStats: function() {
-		this.stats.fps = new Stats();
-		this.stats.fps.showPanel(0);
-
-		this.stats.fps.domElement.style.position = 'relative';
-		this.stats.fps.domElement.style.bottom = '0px';
-		this.stats.fps.domElement.style.right = '0px';
-
-		this.stats.ms = new Stats();
-		this.stats.ms.showPanel(1);
-
-		this.stats.ms.domElement.style.position = 'relative';
-		this.stats.ms.domElement.style.bottom = '0px';
-		this.stats.ms.domElement.style.right = '0px';
-
-		this.stats.mb = new Stats();
-		this.stats.mb.showPanel(2);
-
-		this.stats.mb.domElement.style.position = 'relative';
-		this.stats.mb.domElement.style.top = '0px';
-		this.stats.mb.domElement.style.right = '0px';
-
-		document.body.appendChild(this.stats.fps.domElement);
-		document.body.appendChild(this.stats.ms.domElement);
-		document.body.appendChild(this.stats.mb.domElement);
-	}
 };
 
 module.exports = GUI;
+
+},{"../gui/fps.js":3,"../gui/mb.js":5,"../gui/ms.js":6}],5:[function(require,module,exports){
+'use strict';
+
+/**
+ * MB constructor
+ */
+var MB = function() {
+
+	this.stats = null;
+
+	// self initialize
+	this.initialize();
+};
+
+MB.prototype = {
+	initialize: function() {
+		this.stats = new Stats();
+
+		this.stats.showPanel(2);
+
+		this.stats.domElement.style.position = 'relative';
+		this.stats.domElement.style.bottom = '0px';
+		this.stats.domElement.style.right = '0px';
+
+		document.body.appendChild(this.stats.domElement);
+	},
+
+	begin: function() {
+		this.stats.begin();
+	},
+
+	end: function() {
+		this.stats.end();
+	}
+};
+
+module.exports = MB;
+
+},{}],6:[function(require,module,exports){
+'use strict';
+
+/**
+ * FPS constructor
+ */
+var MS = function() {
+
+	this.stats = null;
+
+	// self initialize
+	this.initialize();
+};
+
+MS.prototype = {
+	initialize: function() {
+		this.stats = new Stats();
+
+		this.stats.showPanel(1);
+
+		this.stats.domElement.style.position = 'relative';
+		this.stats.domElement.style.bottom = '0px';
+		this.stats.domElement.style.right = '0px';
+
+		document.body.appendChild(this.stats.domElement);
+	},
+
+	begin: function() {
+		this.stats.begin();
+	},
+
+	end: function() {
+		this.stats.end();
+	}
+};
+
+module.exports = MS;
 
 },{}]},{},[1])
