@@ -16,14 +16,14 @@ window.requestAnimFrame = (function() {
 		};
 })();
 
-//Initialize when fully loaded
 window.addEventListener("load", initialize);
 
-//Export the Browserify module
 module.exports = initialize;
 
 },{"./game/game.js":2}],2:[function(require,module,exports){
 'use strict';
+
+var GUI = require('../gui/gui.js');
 
 /**
  * Game constructor
@@ -31,25 +31,84 @@ module.exports = initialize;
 var Game = function() {
 	console.log("game has been constructed.");
 
-	this.stats = new Stats();
-	this.stats.showPanel( 0 ); // 0: fps, 1: ms, 2: mb, 3+: custom
-	document.body.appendChild(this.stats.dom );
+	this.GUI = null;
 
-
-	this.update();
-
-
+	// self initialize
+	this.initialize();
 };
 
 Game.prototype = {
+	initialize: function() {
+		this.GUI = new GUI();
+
+		// bootstrap the update
+		this.update();
+	},
+
 	update: function() {
-		this.stats.begin();
-		console.log("update");
+		this.GUI.stats.ms.begin();
+		this.GUI.stats.mb.begin();
+		this.GUI.stats.fps.begin();
 		requestAnimationFrame(this.update.bind(this));
-		this.stats.end();
+		this.GUI.stats.fps.end();
+		this.GUI.stats.mb.end();
+		this.GUI.stats.ms.end();
 	}
 };
 
 module.exports = Game;
+
+},{"../gui/gui.js":3}],3:[function(require,module,exports){
+'use strict';
+
+/**
+ * GUI constructor
+ */
+var GUI = function() {
+
+	this.stats = {
+		fps: null,
+		ms: null,
+		mb: null
+	};
+
+	// self initialize
+	this.initialize();
+};
+
+GUI.prototype = {
+	initialize: function() {
+		this.initializeStats();
+	},
+
+	initializeStats: function() {
+		this.stats.fps = new Stats();
+		this.stats.fps.showPanel(0);
+
+		this.stats.fps.domElement.style.position = 'relative';
+		this.stats.fps.domElement.style.bottom = '0px';
+		this.stats.fps.domElement.style.right = '0px';
+
+		this.stats.ms = new Stats();
+		this.stats.ms.showPanel(1);
+
+		this.stats.ms.domElement.style.position = 'relative';
+		this.stats.ms.domElement.style.bottom = '0px';
+		this.stats.ms.domElement.style.right = '0px';
+
+		this.stats.mb = new Stats();
+		this.stats.mb.showPanel(2);
+
+		this.stats.mb.domElement.style.position = 'relative';
+		this.stats.mb.domElement.style.top = '0px';
+		this.stats.mb.domElement.style.right = '0px';
+
+		document.body.appendChild(this.stats.fps.domElement);
+		document.body.appendChild(this.stats.ms.domElement);
+		document.body.appendChild(this.stats.mb.domElement);
+	}
+};
+
+module.exports = GUI;
 
 },{}]},{},[1])

@@ -1,27 +1,35 @@
 'use strict';
 
+var GUI = require('../gui/gui.js');
+
 /**
  * Game constructor
  */
 var Game = function() {
 	console.log("game has been constructed.");
 
-	this.stats = new Stats();
-	this.stats.showPanel( 0 ); // 0: fps, 1: ms, 2: mb, 3+: custom
-	document.body.appendChild(this.stats.dom );
+	this.GUI = null;
 
-
-	this.update();
-
-
+	// self initialize
+	this.initialize();
 };
 
 Game.prototype = {
+	initialize: function() {
+		this.GUI = new GUI();
+
+		// bootstrap the update
+		this.update();
+	},
+
 	update: function() {
-		this.stats.begin();
-		console.log("update");
+		this.GUI.stats.ms.begin();
+		this.GUI.stats.mb.begin();
+		this.GUI.stats.fps.begin();
 		requestAnimationFrame(this.update.bind(this));
-		this.stats.end();
+		this.GUI.stats.fps.end();
+		this.GUI.stats.mb.end();
+		this.GUI.stats.ms.end();
 	}
 };
 
