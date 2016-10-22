@@ -1,9 +1,9 @@
 'use strict';
 
 /**
- * MS constructor
+ * Graph constructor
  */
-var MS = function() {
+var Graph = function() {
 
 	this.stats = null;
 
@@ -11,16 +11,16 @@ var MS = function() {
 	this.initialize();
 };
 
-MS.prototype = {
+Graph.prototype = {
 	initialize: function() {
+		// initialize stats object
 		this.stats = new Stats();
+		this.stats.showPanel(0);
 
-		this.stats.showPanel(1);
-
-		this.stats.domElement.style.position = 'relative';
+		// append stats object to dom
+		this.stats.domElement.style.position = 'absolute';
 		this.stats.domElement.style.bottom = '0px';
 		this.stats.domElement.style.right = '0px';
-
 		document.body.appendChild(this.stats.domElement);
 	},
 
@@ -33,4 +33,4 @@ MS.prototype = {
 	}
 };
 
-module.exports = MS;
+module.exports = Graph;
