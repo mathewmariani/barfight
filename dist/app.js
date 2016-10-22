@@ -1,6 +1,36 @@
 (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);throw new Error("Cannot find module '"+o+"'")}var f=n[o]={exports:{}};t[o][0].call(f.exports,function(e){var n=t[o][1][e];return s(n?n:e)},f,f.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
 'use strict';
 
+/**
+ * Entity constructor
+ */
+var Entity = function(game, sprite) {
+
+	// TODO: sprites from spritesheets
+	var texture = PIXI.Texture.fromImage('assets/image.png');
+	this.sprite = new PIXI.Sprite(texture);
+
+	// move the ancho to the center
+	this.sprite.anchor.x = 0.5;
+	this.sprite.anchor.y = 0.5;
+
+	// move the sprite to the center of the screen
+	this.sprite.position.x = 250;
+	this.sprite.position.y = 250;
+
+	// add the sprite to the current stage
+	game.stage.addChild(this.sprite);
+};
+
+Entity.prototype = {
+
+};
+
+module.exports = Entity;
+
+},{}],2:[function(require,module,exports){
+'use strict';
+
 var Game = require('./game/game.js');
 
 var initialize = function initializeCanvas() {
@@ -20,11 +50,11 @@ window.addEventListener("load", initialize);
 
 module.exports = initialize;
 
-},{"./game/game.js":2}],2:[function(require,module,exports){
+},{"./game/game.js":3}],3:[function(require,module,exports){
 'use strict';
 
 var GUI = require('../gui/gui.js');
-
+var Entity = require('../core/entity.js');
 /**
  * Game constructor
  */
@@ -32,16 +62,23 @@ var Game = function() {
 	console.log("game has been constructed.");
 
 	/**
-	 * GUI object
+	 * @type {PIXI.Loader}
+	 */
+	this.loader = null;
+
+	/**
 	 * @type {PIXI.Stage}
 	 */
 	this.GUI = null;
 
 	/**
-	 * The PIXI.Renderer object
 	 * @type {PIXI.CanvasRenderer}
 	 */
 	this.renderer = null;
+
+	/**
+	 * @type {PIXI.Stage}
+	 */
 	this.stage = null;
 
 	// bootstrap the loading
@@ -51,24 +88,22 @@ var Game = function() {
 Game.prototype = {
 
 	load: function() {
-		// use a premade instance.
-		var loader = PIXI.loader;
+		this.loader = new PIXI.loaders.Loader();
 
-		loader.add('image',"assets/image.json");
-		loader.once('complete', this.initialize());
-
-		// load assets
-		loader.load();
+		var assets = ["assets/image.json"];
+		this.loader.add(assets).load(this.initialize());
 	},
 
 	initialize: function() {
-
 		// autodetect renderer and append to body
-		this.renderer = PIXI.autoDetectRenderer(800, 600,{backgroundColor : 0x1099bb});
+		this.renderer = PIXI.autoDetectRenderer(512, 512,{backgroundColor : 0x1099bb});
 		document.body.appendChild(this.renderer.view);
 
 		// create root of scene graph
 		this.stage = new PIXI.Container();
+
+		// just a simple test entity
+		var entity = new Entity(this, "blob.png");
 
 		this.GUI = new GUI();
 
@@ -77,19 +112,21 @@ Game.prototype = {
 	},
 
 	update: function() {
-		this.GUI.Stats.begin();
+		this.GUI.Graph.begin();
+
+		// request an animation frame
 		requestAnimationFrame(this.update.bind(this));
 
 		// render container
 		this.renderer.render(this.stage);
 
-		this.GUI.Stats.end();
+		this.GUI.Graph.end();
 	}
 };
 
 module.exports = Game;
 
-},{"../gui/gui.js":4}],3:[function(require,module,exports){
+},{"../core/entity.js":1,"../gui/gui.js":5}],4:[function(require,module,exports){
 'use strict';
 
 /**
@@ -127,7 +164,7 @@ Graph.prototype = {
 
 module.exports = Graph;
 
-},{}],4:[function(require,module,exports){
+},{}],5:[function(require,module,exports){
 'use strict';
 
 var Graph = require('../gui/graph.js');
@@ -137,7 +174,7 @@ var Graph = require('../gui/graph.js');
  */
 var GUI = function() {
 
-	this.graph = null;
+	this.Graph = null;
 
 	// self initialize
 	this.initialize();
@@ -145,10 +182,10 @@ var GUI = function() {
 
 GUI.prototype = {
 	initialize: function() {
-		this.graph = new Graph();
+		this.Graph = new Graph();
 	},
 };
 
 module.exports = GUI;
 
-},{"../gui/graph.js":3}]},{},[1])
+},{"../gui/graph.js":4}]},{},[2])

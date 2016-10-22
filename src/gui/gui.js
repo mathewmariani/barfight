@@ -7,7 +7,7 @@ var Graph = require('../gui/graph.js');
  */
 var GUI = function() {
 
-	this.graph = null;
+	this.Graph = null;
 
 	// self initialize
 	this.initialize();
@@ -15,7 +15,7 @@ var GUI = function() {
 
 GUI.prototype = {
 	initialize: function() {
-		this.graph = new Graph();
+		this.Graph = new Graph();
 	},
 };
 
