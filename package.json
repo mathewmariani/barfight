@@ -1,0 +1,15 @@
+{
+  "title": "Barfight",
+  "name": "barfight",
+  "version": "0.0.0",
+  "author": "Mathew Mariani",
+  "homepage": "https://github.com/mathewmariani",
+  "engines": {
+    "node": "*"
+  },
+  "devDependencies": {
+    "gulp": "*",
+    "gulp-browserify": "*",
+    "browser-sync": "*"
+  }
+}

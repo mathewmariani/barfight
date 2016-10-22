@@ -3,11 +3,17 @@
 
 /**
  * Entity constructor
+ * @param {Game} game   reference to game object
+ * @param {String} sprite [description]
  */
 var Entity = function(game, sprite) {
 
 	// TODO: sprites from spritesheets
 	var texture = PIXI.Texture.fromImage('assets/image.png');
+
+	/**
+	 * @type {PIXI.Sprite}
+	 */
 	this.sprite = new PIXI.Sprite(texture);
 
 	// move the ancho to the center
@@ -18,8 +24,8 @@ var Entity = function(game, sprite) {
 	this.sprite.position.x = 250;
 	this.sprite.position.y = 250;
 
-	// add the sprite to the current stage
-	game.stage.addChild(this.sprite);
+	// add the sprite to the world... where it belongs
+	game.world.addChild(this.sprite);
 };
 
 Entity.prototype = {
@@ -31,9 +37,44 @@ module.exports = Entity;
 },{}],2:[function(require,module,exports){
 'use strict';
 
+/**
+ * World constructor
+ * container for all game objects.
+ * @param {Game} game reference to game object
+ */
+var World = function(game) {
+
+	// inherit from PIXI.Container
+	PIXI.Container.call(this);
+
+	/**
+	 * @type {Game}
+	 */
+	this.game = game;
+
+	// self initialize
+	this.initialize();
+};
+
+// inherit PIXI.Container prototype
+World.prototype = Object.create(PIXI.Container.prototype);
+World.prototype.constructor = World;
+
+/**
+ * initialize world object
+ */
+World.prototype.initialize = function() {
+	this.game.container.addChild(this);
+};
+
+module.exports = World;
+
+},{}],3:[function(require,module,exports){
+'use strict';
+
 var Game = require('./game/game.js');
 
-var initialize = function initializeCanvas() {
+var initialize = function initGame() {
 	var game = new Game();
 };
 
@@ -50,11 +91,13 @@ window.addEventListener("load", initialize);
 
 module.exports = initialize;
 
-},{"./game/game.js":3}],3:[function(require,module,exports){
+},{"./game/game.js":4}],4:[function(require,module,exports){
 'use strict';
 
 var GUI = require('../gui/gui.js');
+var World = require('../core/world.js');
 var Entity = require('../core/entity.js');
+
 /**
  * Game constructor
  */
@@ -67,19 +110,26 @@ var Game = function() {
 	this.loader = null;
 
 	/**
-	 * @type {PIXI.Stage}
+	 * @type {PIXI.Container}
 	 */
-	this.GUI = null;
+	this.container = null;
+
+	/**
+	 * @type {PIXI.Container}
+	 */
+	this.world = null;
+
+	/**
+	 * @type {PIXI.Container}
+	 */
+	this.gui = null;
 
 	/**
 	 * @type {PIXI.CanvasRenderer}
 	 */
 	this.renderer = null;
 
-	/**
-	 * @type {PIXI.Stage}
-	 */
-	this.stage = null;
+
 
 	// bootstrap the loading
 	this.load();
@@ -100,33 +150,36 @@ Game.prototype = {
 		document.body.appendChild(this.renderer.view);
 
 		// create root of scene graph
-		this.stage = new PIXI.Container();
+		this.container = new PIXI.Container();
+
+		// create the world container
+		this.world = new World(this);
 
 		// just a simple test entity
 		var entity = new Entity(this, "blob.png");
 
-		this.GUI = new GUI();
+		this.gui = new GUI(this);
 
 		// bootstrap the update
 		this.update();
 	},
 
 	update: function() {
-		this.GUI.Graph.begin();
+		this.gui.stats.begin();
 
 		// request an animation frame
 		requestAnimationFrame(this.update.bind(this));
 
 		// render container
-		this.renderer.render(this.stage);
+		this.renderer.render(this.container);
 
-		this.GUI.Graph.end();
+		this.gui.stats.end();
 	}
 };
 
 module.exports = Game;
 
-},{"../core/entity.js":1,"../gui/gui.js":5}],4:[function(require,module,exports){
+},{"../core/entity.js":1,"../core/world.js":2,"../gui/gui.js":6}],5:[function(require,module,exports){
 'use strict';
 
 /**
@@ -164,28 +217,55 @@ Graph.prototype = {
 
 module.exports = Graph;
 
-},{}],5:[function(require,module,exports){
+},{}],6:[function(require,module,exports){
 'use strict';
 
 var Graph = require('../gui/graph.js');
 
 /**
  * GUI constructor
+ * @param {Game} game reference to game object
  */
-var GUI = function() {
+var GUI = function(game) {
 
-	this.Graph = null;
+	// inherit from PIXI.Container
+	PIXI.Container.call(this);
+
+	/**
+	 * @type {Game}
+	 */
+	this.game = game;
+
+	/**
+	 * @type {Stats}
+	 */
+	this.stats = null;
 
 	// self initialize
 	this.initialize();
 };
 
-GUI.prototype = {
-	initialize: function() {
-		this.Graph = new Graph();
-	},
+// inherit PIXI.Container prototype
+GUI.prototype = Object.create(PIXI.Container.prototype);
+GUI.prototype.constructor = GUI;
+
+/**
+ * initialize GUI object
+ */
+GUI.prototype.initialize = function() {
+	// initialize stats object
+	this.stats = new Stats();
+	this.stats.showPanel(0);
+
+	// append stats object to dom
+	this.stats.domElement.style.position = 'absolute';
+	this.stats.domElement.style.top = '0px';
+	this.stats.domElement.style.left = '0px';
+	document.body.appendChild(this.stats.domElement);
+
+	this.game.container.addChild(this);
 };
 
 module.exports = GUI;
 
-},{"../gui/graph.js":4}]},{},[2])
+},{"../gui/graph.js":5}]},{},[3])

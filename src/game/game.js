@@ -1,7 +1,9 @@
 'use strict';
 
 var GUI = require('../gui/gui.js');
+var World = require('../core/world.js');
 var Entity = require('../core/entity.js');
+
 /**
  * Game constructor
  */
@@ -14,21 +16,26 @@ var Game = function() {
 	this.loader = null;
 
 	/**
-	 * @type {PIXI.Stage}
+	 * @type {PIXI.Container}
 	 */
-	this.GUI = null;
+	this.container = null;
 
 	/**
-	 * @type {PIXI.CanvasRenderer}
+	 * @type {PIXI.Container}
+	 */
+	this.world = null;
+
+	/**
+	 * @type {PIXI.Container}
+	 */
+	this.gui = null;
+
+	/**
+	 * @type {PIXI.Renderer}
 	 */
 	this.renderer = null;
 
-	/**
-	 * @type {PIXI.Stage}
-	 */
-	this.stage = null;
-
-	// bootstrap the loading
+	// self load
 	this.load();
 };
 
@@ -47,27 +54,30 @@ Game.prototype = {
 		document.body.appendChild(this.renderer.view);
 
 		// create root of scene graph
-		this.stage = new PIXI.Container();
+		this.container = new PIXI.Container();
+
+		// create the world container
+		this.world = new World(this);
 
 		// just a simple test entity
 		var entity = new Entity(this, "blob.png");
 
-		this.GUI = new GUI();
+		this.gui = new GUI(this);
 
 		// bootstrap the update
 		this.update();
 	},
 
 	update: function() {
-		this.GUI.Graph.begin();
+		this.gui.stats.begin();
 
 		// request an animation frame
 		requestAnimationFrame(this.update.bind(this));
 
 		// render container
-		this.renderer.render(this.stage);
+		this.renderer.render(this.container);
 
-		this.GUI.Graph.end();
+		this.gui.stats.end();
 	}
 };
 

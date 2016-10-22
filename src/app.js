@@ -2,7 +2,7 @@
 
 var Game = require('./game/game.js');
 
-var initialize = function initializeCanvas() {
+var initialize = function initGame() {
 	var game = new Game();
 };
 

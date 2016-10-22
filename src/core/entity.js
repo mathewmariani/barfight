@@ -2,11 +2,17 @@
 
 /**
  * Entity constructor
+ * @param {Game} game   reference to game object
+ * @param {String} sprite [description]
  */
 var Entity = function(game, sprite) {
 
 	// TODO: sprites from spritesheets
 	var texture = PIXI.Texture.fromImage('assets/image.png');
+
+	/**
+	 * @type {PIXI.Sprite}
+	 */
 	this.sprite = new PIXI.Sprite(texture);
 
 	// move the ancho to the center
@@ -17,8 +23,8 @@ var Entity = function(game, sprite) {
 	this.sprite.position.x = 250;
 	this.sprite.position.y = 250;
 
-	// add the sprite to the current stage
-	game.stage.addChild(this.sprite);
+	// add the sprite to the world... where it belongs
+	game.world.addChild(this.sprite);
 };
 
 Entity.prototype = {
