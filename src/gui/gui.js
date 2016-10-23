@@ -1,7 +1,7 @@
 'use strict';
 
 var Graph = require('../gui/graph.js');
-
+var Identification = require('../gui/id.js');
 /**
  * GUI constructor
  * @param {Game} game reference to game object
@@ -42,6 +42,10 @@ GUI.prototype.initialize = function() {
 	this.stats.domElement.style.top = '0px';
 	this.stats.domElement.style.left = '0px';
 	document.body.appendChild(this.stats.domElement);
+
+	var id = new Identification();
+	id.initialize();
+	this.addChild(id);
 
 	this.game.container.addChild(this);
 };

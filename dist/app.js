@@ -96,6 +96,7 @@ module.exports = initialize;
 
 var GUI = require('../gui/gui.js');
 var World = require('../core/world.js');
+var Map = require('../tilemap/map.js');
 var Entity = require('../core/entity.js');
 
 /**
@@ -120,18 +121,21 @@ var Game = function() {
 	this.world = null;
 
 	/**
+	 * @type {PIXI.particles.ParticleContainer}
+	 */
+	this.map = null;
+
+	/**
 	 * @type {PIXI.Container}
 	 */
 	this.gui = null;
 
 	/**
-	 * @type {PIXI.CanvasRenderer}
+	 * @type {PIXI.Renderer}
 	 */
 	this.renderer = null;
 
-
-
-	// bootstrap the loading
+	// self load
 	this.load();
 };
 
@@ -155,8 +159,8 @@ Game.prototype = {
 		// create the world container
 		this.world = new World(this);
 
-		// just a simple test entity
-		var entity = new Entity(this, "blob.png");
+		this.map = new Map(this, 0,0,5,5);
+		this.map.initialize();
 
 		this.gui = new GUI(this);
 
@@ -179,7 +183,7 @@ Game.prototype = {
 
 module.exports = Game;
 
-},{"../core/entity.js":1,"../core/world.js":2,"../gui/gui.js":6}],5:[function(require,module,exports){
+},{"../core/entity.js":1,"../core/world.js":2,"../gui/gui.js":6,"../tilemap/map.js":8}],5:[function(require,module,exports){
 'use strict';
 
 /**
@@ -221,7 +225,7 @@ module.exports = Graph;
 'use strict';
 
 var Graph = require('../gui/graph.js');
-
+var Identification = require('../gui/id.js');
 /**
  * GUI constructor
  * @param {Game} game reference to game object
@@ -263,9 +267,110 @@ GUI.prototype.initialize = function() {
 	this.stats.domElement.style.left = '0px';
 	document.body.appendChild(this.stats.domElement);
 
+	var id = new Identification();
+	id.initialize();
+	this.addChild(id);
+
 	this.game.container.addChild(this);
 };
 
 module.exports = GUI;
 
-},{"../gui/graph.js":5}]},{},[3])
+},{"../gui/graph.js":5,"../gui/id.js":7}],7:[function(require,module,exports){
+'use strict';
+
+/**
+ * Identification constructor
+ */
+var Identification = function() {
+	// inherit from PIXI.Container
+	PIXI.Container.call(this);
+};
+
+// inherit PIXI.Container prototype
+Identification.prototype = Object.create(PIXI.Container.prototype);
+Identification.prototype.constructor = Identification;
+
+/**
+ * initialize Identification object
+ */
+Identification.prototype.initialize = function() {
+			var text = new PIXI.Text(
+				"v0.0.0 pre-development",
+				{
+					fontFamily: "Courier New",
+					fontSize: 12,
+					fill: 0xffffff,
+					align: "left"
+				}
+			);
+
+			text.position.x = 15
+			text.position.y = 490;
+
+			this.addChild(text);
+};
+
+module.exports = Identification;
+
+},{}],8:[function(require,module,exports){
+'use strict';
+
+/**
+ * Map constructor
+ * @param {Game} game reference to game object
+ * @param {Number} x the x position of the map (default 0)
+ * @param {Number} y the y position of the map (default 0)
+ * @param {Number} w the width of this map (default 0)
+ * @param {Number} h the height of this map (default 0)
+ */
+var Map = function(game, x, y, w, h) {
+
+	// inherit from PIXI.particles.ParticleContainer
+	PIXI.particles.ParticleContainer.call(this);
+
+	/**
+	 * @type {Game}
+	 */
+	this.game = game;
+
+	this.x = 0;
+	this.y = 0;
+	this.w = w || 0;
+	this.h = h || 0;
+
+	this.tiles = [];
+};
+
+// inherit PIXI.particles.ParticleContainer
+Map.prototype = Object.create(PIXI.particles.ParticleContainer.prototype);
+Map.prototype.constructor = Map;
+
+Map.prototype.initialize = function() {
+	// TODO: sprites from spritesheets
+	var texture = PIXI.Texture.fromImage('assets/image.png');
+
+	for(var y = 0; y < this.h; ++y) {
+		this.tiles[y] = [];
+		for(var x = 0; x < this.w; ++x) {
+
+			// TODO: sprites from spritesheets
+			var tile = new PIXI.Sprite(texture);
+
+			// FIXME: these values shouldn't be "magic" numbers
+			// acutally, they could be; soo we'll see?
+			tile.position.x = x * 32;
+			tile.position.y = y * 32;
+			this.addChild(tile);
+
+			this.tiles[y][x] = tile;
+
+		}
+	}
+
+	this.game.world.addChild(this);
+};
+
+module.exports = Map;
+
+},{}]},{},[3])

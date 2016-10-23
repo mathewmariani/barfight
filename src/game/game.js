@@ -2,6 +2,7 @@
 
 var GUI = require('../gui/gui.js');
 var World = require('../core/world.js');
+var Map = require('../tilemap/map.js');
 var Entity = require('../core/entity.js');
 
 /**
@@ -24,6 +25,11 @@ var Game = function() {
 	 * @type {PIXI.Container}
 	 */
 	this.world = null;
+
+	/**
+	 * @type {PIXI.particles.ParticleContainer}
+	 */
+	this.map = null;
 
 	/**
 	 * @type {PIXI.Container}
@@ -59,8 +65,8 @@ Game.prototype = {
 		// create the world container
 		this.world = new World(this);
 
-		// just a simple test entity
-		var entity = new Entity(this, "blob.png");
+		this.map = new Map(this, 0,0,5,5);
+		this.map.initialize();
 
 		this.gui = new GUI(this);
 

@@ -1,11 +1,11 @@
 {
   "frames": {
     "default.png": {
-      "frame": {"x": 0, "y": 0, "w": 48, "h": 48},
+      "frame": {"x": 0, "y": 0, "w": 32, "h": 32},
       "rotated": false,
       "trimmed": false,
-      "spriteSourceSize": {"x": 0, "y": 0, "w": 48, "h": 48},
-      "sourceSize": {"w": 48, "h": 48}
+      "spriteSourceSize": {"x": 0, "y": 0, "w": 32, "h": 32},
+      "sourceSize": {"w": 32, "h": 32}
 		}
   },
 
