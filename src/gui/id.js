@@ -2,10 +2,18 @@
 
 /**
  * Identification constructor
+ * @param {Game} game reference to game object
  */
-var Identification = function() {
+var Identification = function(game) {
+
 	// inherit from PIXI.Container
 	PIXI.Container.call(this);
+
+	/**
+	 * @type {Game}
+	 */
+	this.game = game;
+
 };
 
 // inherit PIXI.Container prototype
@@ -27,7 +35,7 @@ Identification.prototype.initialize = function() {
 			);
 
 			text.position.x = 15
-			text.position.y = 490;
+			text.position.y = this.game.height-24;
 
 			this.addChild(text);
 };

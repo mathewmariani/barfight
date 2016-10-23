@@ -1,7 +1,7 @@
 'use strict';
 
-var Graph = require('../gui/graph.js');
 var Identification = require('../gui/id.js');
+
 /**
  * GUI constructor
  * @param {Game} game reference to game object
@@ -43,11 +43,22 @@ GUI.prototype.initialize = function() {
 	this.stats.domElement.style.left = '0px';
 	document.body.appendChild(this.stats.domElement);
 
-	var id = new Identification();
+	var id = new Identification(this.game);
 	id.initialize();
 	this.addChild(id);
 
+	// track mousemove
+	this.game.container.mousemove = this.mouseMove.bind(this);
+
+	// attach this to the root scene
 	this.game.container.addChild(this);
+};
+
+// FIXME: mousemove won't work
+GUI.prototype.mouseMove = function(mousedata) {
+	console.log (
+		"mouse position (" + mousedata.global.x + ", " + mousedata.global.y + ")"
+	);
 };
 
 module.exports = GUI;

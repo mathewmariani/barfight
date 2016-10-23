@@ -16,21 +16,27 @@ var Camera = function(game) {
 		x: 0, y: 0
 	};
 
-	// FIXME: use rectangles
-	this.viewport = {
-		x: 0, y: 0, w: 32, h: 32
-	};
-
 	// TODO: right now the camera is a single point (this.position)
 	// it needs to have a viewport so we can use its center
 	// NOTE: right now the camera's top-left is where the position is set
+	// TODO: add zoom or "scale"
+
+	// FIXME: use rectangles
+	this.viewport = {
+		x: 0, y: 0,
+		w: game.width,
+		h: game.height
+	};
+
 };
 
 Camera.prototype = {
 	update: function() {
+		// NOTE: for now just circle around the origin (0,0)
 		var angle = 1 * this.game.timer.elapsedTime;
-		this.position.x = Math.cos(angle)*32;
-		this.position.y = Math.sin(angle)*32;
+
+		this.position.x = (this.viewport.w / 2)  - Math.cos(angle)*32;
+		this.position.y = (this.viewport.h / 2) - Math.sin(angle)*32;
 	}
 };
 
@@ -62,7 +68,9 @@ var Entity = function(game, sprite) {
 	this.sprite.position.x = 250;
 	this.sprite.position.y = 250;
 
+
 	// add the sprite to the world... where it belongs
+	// NOTE: I belong to the map that created me, but were not there yet
 	game.world.addChild(this.sprite);
 };
 
@@ -106,15 +114,17 @@ Map.prototype = Object.create(PIXI.particles.ParticleContainer.prototype);
 Map.prototype.constructor = Map;
 
 Map.prototype.initialize = function() {
-	// TODO: sprites from spritesheets
-	var texture = PIXI.Texture.fromImage('assets/image.png');
-
 	for(var y = 0; y < this.h; ++y) {
 		this.tiles[y] = [];
 		for(var x = 0; x < this.w; ++x) {
+			var tile = null;
+			var id = this.game.loader.resources["assets/image.json"].textures;
+			if(y === 0 || y === this.h - 1 || x === 0 || x === this.w - 1) {
+				tile = new PIXI.Sprite(id["blue.png"]);
+			} else {
+				tile = new PIXI.Sprite(id["pink.png"]);
+			}
 
-			// TODO: sprites from spritesheets
-			var tile = new PIXI.Sprite(texture);
 
 			// FIXME: these values shouldn't be "magic" numbers
 			// acutally, they could be; soo we'll see?
@@ -155,6 +165,8 @@ module.exports = Timer;
 },{}],5:[function(require,module,exports){
 'use strict';
 
+var Camera = require('./camera.js');
+
 /**
  * World constructor
  * container for all game objects.
@@ -170,6 +182,11 @@ var World = function(game) {
 	 */
 	this.game = game;
 
+	/**
+	 * @type {Camera}
+	 */
+	this.camera = null;
+
 	// self initialize
 	this.initialize();
 };
@@ -182,12 +199,28 @@ World.prototype.constructor = World;
  * initialize world object
  */
 World.prototype.initialize = function() {
+
+	// create the camera object
+	this.camera = new Camera(this.game);
+
+	// attach this to the root scene
 	this.game.container.addChild(this);
 };
 
+World.prototype.update = function() {
+	this.camera.update();
+
+	// update the coordinate of the world object relative to
+	// the local coordinates of the parent container (this.container).
+	this.position = new PIXI.Point(
+		this.camera.position.x,
+		this.camera.position.y
+	);
+}
+
 module.exports = World;
 
-},{}],6:[function(require,module,exports){
+},{"./camera.js":1}],6:[function(require,module,exports){
 'use strict';
 
 var Game = require('./game/game.js');
@@ -226,13 +259,22 @@ var GUI = require('../gui/gui.js');
 var World = require('../core/world.js');
 var Map = require('../core/map.js');
 var Entity = require('../core/entity.js');
-var Camera = require('../core/camera.js');
 var Timer = require('../core/timer.js');
 /**
  * Game constructor
  */
 var Game = function() {
 	console.log("game has been constructed.");
+
+	/**
+	 * @type {Number}
+	 */
+	this.width = null;
+
+	/**
+	 * @type {Number}
+	 */
+	this.height = null;
 
 	/**
 	 * @type {PIXI.Loader}
@@ -259,14 +301,15 @@ var Game = function() {
 	 */
 	this.gui = null;
 
-	this.camera = null;
+	/**
+	 * @type {Timer}
+	 */
+	this.timer = new Timer();
 
 	/**
 	 * @type {PIXI.Renderer}
 	 */
 	this.renderer = null;
-
-	this.timer = new Timer();
 
 	// self load
 	this.load();
@@ -278,25 +321,30 @@ Game.prototype = {
 		this.loader = new PIXI.loaders.Loader();
 
 		var assets = ["assets/image.json"];
-		this.loader.add(assets).load(this.initialize());
+		this.loader.add(assets).load(this.initialize.bind(this))
 	},
 
 	initialize: function() {
-		// autodetect renderer and append to body
-		this.renderer = PIXI.autoDetectRenderer(512, 512,{backgroundColor : 0x6495ED});
-		document.body.appendChild(this.renderer.view);
+
+		// just make us fullscreen
+		// NOTE: resize events?
+		this.width = window.innerWidth;
+		this.height = window.innerHeight;
 
 		// create root of scene graph
 		this.container = new PIXI.Container();
 
+		// autodetect renderer and append to dom
+		this.renderer = PIXI.autoDetectRenderer(
+			this.width, this.height, {backgroundColor : 0x6495ED}
+		);
+		document.body.appendChild(this.renderer.view);
+
 		// create the world container
 		this.world = new World(this);
 
-		// create the camera object
-		this.camera = new Camera(this);
-
 		// create the map container
-		this.map = new Map(this, 0,0,5,5);
+		this.map = new Map(this, 0,0,15,9);
 		this.map.initialize();
 
 		// create the gui container
@@ -313,13 +361,7 @@ Game.prototype = {
 		requestAnimationFrame(this.update.bind(this));
 
 		this.timer.update();
-		this.camera.update();
-
-		// update the coordinate of the world object relative to
-		// the local coordinates of the parent container (this.container).
-		this.world.position = new PIXI.Point(
-			this.camera.position.x, this.camera.position.y
-		);
+		this.world.update();
 
 		// render container
 		this.renderer.render(this.container);
@@ -330,49 +372,11 @@ Game.prototype = {
 
 module.exports = Game;
 
-},{"../core/camera.js":1,"../core/entity.js":2,"../core/map.js":3,"../core/timer.js":4,"../core/world.js":5,"../gui/gui.js":9}],8:[function(require,module,exports){
+},{"../core/entity.js":2,"../core/map.js":3,"../core/timer.js":4,"../core/world.js":5,"../gui/gui.js":8}],8:[function(require,module,exports){
 'use strict';
 
-/**
- * Graph constructor
- */
-var Graph = function() {
-
-	this.stats = null;
-
-	// self initialize
-	this.initialize();
-};
-
-Graph.prototype = {
-	initialize: function() {
-		// initialize stats object
-		this.stats = new Stats();
-		this.stats.showPanel(0);
-
-		// append stats object to dom
-		this.stats.domElement.style.position = 'absolute';
-		this.stats.domElement.style.bottom = '0px';
-		this.stats.domElement.style.right = '0px';
-		document.body.appendChild(this.stats.domElement);
-	},
-
-	begin: function() {
-		this.stats.begin();
-	},
-
-	end: function() {
-		this.stats.end();
-	}
-};
-
-module.exports = Graph;
-
-},{}],9:[function(require,module,exports){
-'use strict';
-
-var Graph = require('../gui/graph.js');
 var Identification = require('../gui/id.js');
+
 /**
  * GUI constructor
  * @param {Game} game reference to game object
@@ -414,24 +418,43 @@ GUI.prototype.initialize = function() {
 	this.stats.domElement.style.left = '0px';
 	document.body.appendChild(this.stats.domElement);
 
-	var id = new Identification();
+	var id = new Identification(this.game);
 	id.initialize();
 	this.addChild(id);
 
+	// track mousemove
+	this.game.container.mousemove = this.mouseMove.bind(this);
+
+	// attach this to the root scene
 	this.game.container.addChild(this);
+};
+
+// FIXME: mousemove won't work
+GUI.prototype.mouseMove = function(mousedata) {
+	console.log (
+		"mouse position (" + mousedata.global.x + ", " + mousedata.global.y + ")"
+	);
 };
 
 module.exports = GUI;
 
-},{"../gui/graph.js":8,"../gui/id.js":10}],10:[function(require,module,exports){
+},{"../gui/id.js":9}],9:[function(require,module,exports){
 'use strict';
 
 /**
  * Identification constructor
+ * @param {Game} game reference to game object
  */
-var Identification = function() {
+var Identification = function(game) {
+
 	// inherit from PIXI.Container
 	PIXI.Container.call(this);
+
+	/**
+	 * @type {Game}
+	 */
+	this.game = game;
+
 };
 
 // inherit PIXI.Container prototype
@@ -453,7 +476,7 @@ Identification.prototype.initialize = function() {
 			);
 
 			text.position.x = 15
-			text.position.y = 490;
+			text.position.y = this.game.height-24;
 
 			this.addChild(text);
 };

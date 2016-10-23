@@ -23,7 +23,9 @@ var Entity = function(game, sprite) {
 	this.sprite.position.x = 250;
 	this.sprite.position.y = 250;
 
+
 	// add the sprite to the world... where it belongs
+	// NOTE: I belong to the map that created me, but were not there yet
 	game.world.addChild(this.sprite);
 };
 

@@ -31,15 +31,17 @@ Map.prototype = Object.create(PIXI.particles.ParticleContainer.prototype);
 Map.prototype.constructor = Map;
 
 Map.prototype.initialize = function() {
-	// TODO: sprites from spritesheets
-	var texture = PIXI.Texture.fromImage('assets/image.png');
-
 	for(var y = 0; y < this.h; ++y) {
 		this.tiles[y] = [];
 		for(var x = 0; x < this.w; ++x) {
+			var tile = null;
+			var id = this.game.loader.resources["assets/image.json"].textures;
+			if(y === 0 || y === this.h - 1 || x === 0 || x === this.w - 1) {
+				tile = new PIXI.Sprite(id["blue.png"]);
+			} else {
+				tile = new PIXI.Sprite(id["pink.png"]);
+			}
 
-			// TODO: sprites from spritesheets
-			var tile = new PIXI.Sprite(texture);
 
 			// FIXME: these values shouldn't be "magic" numbers
 			// acutally, they could be; soo we'll see?
