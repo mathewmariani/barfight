@@ -47,18 +47,8 @@ GUI.prototype.initialize = function() {
 	id.initialize();
 	this.addChild(id);
 
-	// track mousemove
-	this.game.container.mousemove = this.mouseMove.bind(this);
-
 	// attach this to the root scene
 	this.game.container.addChild(this);
-};
-
-// FIXME: mousemove won't work
-GUI.prototype.mouseMove = function(mousedata) {
-	console.log (
-		"mouse position (" + mousedata.global.x + ", " + mousedata.global.y + ")"
-	);
 };
 
 module.exports = GUI;

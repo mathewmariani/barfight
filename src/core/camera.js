@@ -34,7 +34,7 @@ Camera.prototype = {
 		// NOTE: for now just circle around the origin (0,0)
 		var angle = 1 * this.game.timer.elapsedTime;
 
-		this.position.x = (this.viewport.w / 2)  - Math.cos(angle)*32;
+		this.position.x = (this.viewport.w / 2) - Math.cos(angle)*32;
 		this.position.y = (this.viewport.h / 2) - Math.sin(angle)*32;
 	}
 };

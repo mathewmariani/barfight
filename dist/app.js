@@ -2,6 +2,25 @@
 'use strict';
 
 /**
+ * Batch constructor
+ */
+var Batch = function() {
+
+	// inherit from PIXI.Container
+	PIXI.Container.call(this);
+
+};
+
+// inherit PIXI.Container prototype
+Batch.prototype = Object.create(PIXI.Container.prototype);
+Batch.prototype.constructor = Batch;
+
+module.exports = Batch;
+
+},{}],2:[function(require,module,exports){
+'use strict';
+
+/**
  * Camera constructor
  * @param {Game} game reference to game object
  */
@@ -35,43 +54,35 @@ Camera.prototype = {
 		// NOTE: for now just circle around the origin (0,0)
 		var angle = 1 * this.game.timer.elapsedTime;
 
-		this.position.x = (this.viewport.w / 2)  - Math.cos(angle)*32;
+		this.position.x = (this.viewport.w / 2) - Math.cos(angle)*32;
 		this.position.y = (this.viewport.h / 2) - Math.sin(angle)*32;
 	}
 };
 
 module.exports = Camera;
 
-},{}],2:[function(require,module,exports){
+},{}],3:[function(require,module,exports){
 'use strict';
 
 /**
  * Entity constructor
  * @param {Game} game   reference to game object
- * @param {String} sprite [description]
  */
 var Entity = function(game, sprite) {
 
-	// TODO: sprites from spritesheets
-	var texture = PIXI.Texture.fromImage('assets/image.png');
+	this.game = game;
+
+	var texture = this.game.loader.resources["assets/image.json"].textures;
 
 	/**
 	 * @type {PIXI.Sprite}
 	 */
-	this.sprite = new PIXI.Sprite(texture);
+	this.sprite = new PIXI.Sprite(texture["yellow.png"]);
 
-	// move the ancho to the center
-	this.sprite.anchor.x = 0.5;
-	this.sprite.anchor.y = 0.5;
+	// set the position
+	this.sprite.position.x = 0;
+	this.sprite.position.y = 0;
 
-	// move the sprite to the center of the screen
-	this.sprite.position.x = 250;
-	this.sprite.position.y = 250;
-
-
-	// add the sprite to the world... where it belongs
-	// NOTE: I belong to the map that created me, but were not there yet
-	game.world.addChild(this.sprite);
 };
 
 Entity.prototype = {
@@ -80,8 +91,10 @@ Entity.prototype = {
 
 module.exports = Entity;
 
-},{}],3:[function(require,module,exports){
+},{}],4:[function(require,module,exports){
 'use strict';
+
+var Batch = require("./batch.js");
 
 /**
  * Map constructor
@@ -94,23 +107,28 @@ module.exports = Entity;
 var Map = function(game, x, y, w, h) {
 
 	// inherit from PIXI.particles.ParticleContainer
-	PIXI.particles.ParticleContainer.call(this);
-
-	/**
-	 * @type {Game}
-	 */
-	this.game = game;
+	//PIXI.particles.ParticleContainer.call(this);
+	PIXI.Container.call(this);
 
 	this.x = 0;
 	this.y = 0;
 	this.w = w || 0;
 	this.h = h || 0;
 
+	/**
+	 * @type {Game}
+	 */
+	this.game = game;
+
 	this.tiles = [];
+
+	this.entities = new Batch();
 };
 
 // inherit PIXI.particles.ParticleContainer
-Map.prototype = Object.create(PIXI.particles.ParticleContainer.prototype);
+// Map.prototype = Object.create(PIXI.particles.ParticleContainer.prototype);
+// Map.prototype.constructor = Map;
+Map.prototype = Object.create(PIXI.Container.prototype);
 Map.prototype.constructor = Map;
 
 Map.prototype.initialize = function() {
@@ -124,7 +142,6 @@ Map.prototype.initialize = function() {
 			} else {
 				tile = new PIXI.Sprite(id["pink.png"]);
 			}
-
 
 			// FIXME: these values shouldn't be "magic" numbers
 			// acutally, they could be; soo we'll see?
@@ -142,7 +159,7 @@ Map.prototype.initialize = function() {
 
 module.exports = Map;
 
-},{}],4:[function(require,module,exports){
+},{"./batch.js":1}],5:[function(require,module,exports){
 'use strict';
 
 /**
@@ -162,7 +179,7 @@ Timer.prototype = {
 
 module.exports = Timer;
 
-},{}],5:[function(require,module,exports){
+},{}],6:[function(require,module,exports){
 'use strict';
 
 var Camera = require('./camera.js');
@@ -220,7 +237,7 @@ World.prototype.update = function() {
 
 module.exports = World;
 
-},{"./camera.js":1}],6:[function(require,module,exports){
+},{"./camera.js":2}],7:[function(require,module,exports){
 'use strict';
 
 var Game = require('./game/game.js');
@@ -252,7 +269,7 @@ window.addEventListener("load", initialize);
 
 module.exports = initialize;
 
-},{"./game/game.js":7}],7:[function(require,module,exports){
+},{"./game/game.js":8}],8:[function(require,module,exports){
 'use strict';
 
 var GUI = require('../gui/gui.js');
@@ -311,6 +328,15 @@ var Game = function() {
 	 */
 	this.renderer = null;
 
+	/**
+	 * @type {PIXI.Point}
+	 */
+	this.mouse = null;
+
+	this.settings = {
+		tilesize: 32
+	};
+
 	// self load
 	this.load();
 };
@@ -340,18 +366,41 @@ Game.prototype = {
 		);
 		document.body.appendChild(this.renderer.view);
 
+		// track mousemove
+		this.renderer.plugins.interaction.on(
+			"mousemove", this.mouseMove.bind(this)
+		);
+
 		// create the world container
 		this.world = new World(this);
 
-		// create the map container
-		this.map = new Map(this, 0,0,15,9);
-		this.map.initialize();
+		this.createMap();
 
 		// create the gui container
 		this.gui = new GUI(this);
 
 		// bootstrap the update
 		this.update();
+	},
+
+	createMap: function() {
+		// create the map container
+		this.map = new Map(this, 0,0,15,9);
+		this.map.initialize();
+
+		var entity = new Entity(this);
+		this.map.entities.addChild(entity.sprite);
+
+		this.world.addChild(this.map.entities);
+	},
+
+	mouseMove: function(mouse) {
+		this.mouse = {
+			x: mouse.data.global.x - this.world.camera.position.x,
+			y: mouse.data.global.y - this.world.camera.position.y
+		};
+
+		console.log ("(" + this.mouse.x + ", " + this.mouse.y + ")");
 	},
 
 	update: function() {
@@ -372,7 +421,7 @@ Game.prototype = {
 
 module.exports = Game;
 
-},{"../core/entity.js":2,"../core/map.js":3,"../core/timer.js":4,"../core/world.js":5,"../gui/gui.js":8}],8:[function(require,module,exports){
+},{"../core/entity.js":3,"../core/map.js":4,"../core/timer.js":5,"../core/world.js":6,"../gui/gui.js":9}],9:[function(require,module,exports){
 'use strict';
 
 var Identification = require('../gui/id.js');
@@ -422,23 +471,13 @@ GUI.prototype.initialize = function() {
 	id.initialize();
 	this.addChild(id);
 
-	// track mousemove
-	this.game.container.mousemove = this.mouseMove.bind(this);
-
 	// attach this to the root scene
 	this.game.container.addChild(this);
 };
 
-// FIXME: mousemove won't work
-GUI.prototype.mouseMove = function(mousedata) {
-	console.log (
-		"mouse position (" + mousedata.global.x + ", " + mousedata.global.y + ")"
-	);
-};
-
 module.exports = GUI;
 
-},{"../gui/id.js":9}],9:[function(require,module,exports){
+},{"../gui/id.js":10}],10:[function(require,module,exports){
 'use strict';
 
 /**
@@ -483,4 +522,4 @@ Identification.prototype.initialize = function() {
 
 module.exports = Identification;
 
-},{}]},{},[6])
+},{}]},{},[7])

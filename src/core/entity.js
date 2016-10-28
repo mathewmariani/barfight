@@ -3,30 +3,22 @@
 /**
  * Entity constructor
  * @param {Game} game   reference to game object
- * @param {String} sprite [description]
  */
 var Entity = function(game, sprite) {
 
-	// TODO: sprites from spritesheets
-	var texture = PIXI.Texture.fromImage('assets/image.png');
+	this.game = game;
+
+	var texture = this.game.loader.resources["assets/image.json"].textures;
 
 	/**
 	 * @type {PIXI.Sprite}
 	 */
-	this.sprite = new PIXI.Sprite(texture);
+	this.sprite = new PIXI.Sprite(texture["yellow.png"]);
 
-	// move the ancho to the center
-	this.sprite.anchor.x = 0.5;
-	this.sprite.anchor.y = 0.5;
+	// set the position
+	this.sprite.position.x = 0;
+	this.sprite.position.y = 0;
 
-	// move the sprite to the center of the screen
-	this.sprite.position.x = 250;
-	this.sprite.position.y = 250;
-
-
-	// add the sprite to the world... where it belongs
-	// NOTE: I belong to the map that created me, but were not there yet
-	game.world.addChild(this.sprite);
 };
 
 Entity.prototype = {

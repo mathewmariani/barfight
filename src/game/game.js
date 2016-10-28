@@ -56,6 +56,15 @@ var Game = function() {
 	 */
 	this.renderer = null;
 
+	/**
+	 * @type {PIXI.Point}
+	 */
+	this.mouse = null;
+
+	this.settings = {
+		tilesize: 32
+	};
+
 	// self load
 	this.load();
 };
@@ -85,18 +94,41 @@ Game.prototype = {
 		);
 		document.body.appendChild(this.renderer.view);
 
+		// track mousemove
+		this.renderer.plugins.interaction.on(
+			"mousemove", this.mouseMove.bind(this)
+		);
+
 		// create the world container
 		this.world = new World(this);
 
-		// create the map container
-		this.map = new Map(this, 0,0,15,9);
-		this.map.initialize();
+		this.createMap();
 
 		// create the gui container
 		this.gui = new GUI(this);
 
 		// bootstrap the update
 		this.update();
+	},
+
+	createMap: function() {
+		// create the map container
+		this.map = new Map(this, 0,0,15,9);
+		this.map.initialize();
+
+		var entity = new Entity(this);
+		this.map.entities.addChild(entity.sprite);
+
+		this.world.addChild(this.map.entities);
+	},
+
+	mouseMove: function(mouse) {
+		this.mouse = {
+			x: mouse.data.global.x - this.world.camera.position.x,
+			y: mouse.data.global.y - this.world.camera.position.y
+		};
+
+		console.log ("(" + this.mouse.x + ", " + this.mouse.y + ")");
 	},
 
 	update: function() {

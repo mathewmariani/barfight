@@ -1,5 +1,7 @@
 'use strict';
 
+var Batch = require("./batch.js");
+
 /**
  * Map constructor
  * @param {Game} game reference to game object
@@ -11,23 +13,28 @@
 var Map = function(game, x, y, w, h) {
 
 	// inherit from PIXI.particles.ParticleContainer
-	PIXI.particles.ParticleContainer.call(this);
-
-	/**
-	 * @type {Game}
-	 */
-	this.game = game;
+	//PIXI.particles.ParticleContainer.call(this);
+	PIXI.Container.call(this);
 
 	this.x = 0;
 	this.y = 0;
 	this.w = w || 0;
 	this.h = h || 0;
 
+	/**
+	 * @type {Game}
+	 */
+	this.game = game;
+
 	this.tiles = [];
+
+	this.entities = new Batch();
 };
 
 // inherit PIXI.particles.ParticleContainer
-Map.prototype = Object.create(PIXI.particles.ParticleContainer.prototype);
+// Map.prototype = Object.create(PIXI.particles.ParticleContainer.prototype);
+// Map.prototype.constructor = Map;
+Map.prototype = Object.create(PIXI.Container.prototype);
 Map.prototype.constructor = Map;
 
 Map.prototype.initialize = function() {
@@ -41,7 +48,6 @@ Map.prototype.initialize = function() {
 			} else {
 				tile = new PIXI.Sprite(id["pink.png"]);
 			}
-
 
 			// FIXME: these values shouldn't be "magic" numbers
 			// acutally, they could be; soo we'll see?
