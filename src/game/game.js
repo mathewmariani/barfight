@@ -95,6 +95,7 @@ Game.prototype = {
 		document.body.appendChild(this.renderer.view);
 
 		// track mousemove
+		this.mouse = new PIXI.Point(0, 0);
 		this.renderer.plugins.interaction.on(
 			"mousemove", this.mouseMove.bind(this)
 		);
@@ -123,12 +124,15 @@ Game.prototype = {
 	},
 
 	mouseMove: function(mouse) {
-		this.mouse = {
+		var worldPos = {
 			x: mouse.data.global.x - this.world.camera.position.x,
 			y: mouse.data.global.y - this.world.camera.position.y
 		};
 
-		console.log ("(" + this.mouse.x + ", " + this.mouse.y + ")");
+		this.mouse = {
+			x: Math.floor((worldPos.x) / 32),
+			y: Math.floor((worldPos.y) / 32)
+		};
 	},
 
 	update: function() {

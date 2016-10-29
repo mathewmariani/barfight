@@ -367,6 +367,7 @@ Game.prototype = {
 		document.body.appendChild(this.renderer.view);
 
 		// track mousemove
+		this.mouse = new PIXI.Point(0, 0);
 		this.renderer.plugins.interaction.on(
 			"mousemove", this.mouseMove.bind(this)
 		);
@@ -395,12 +396,15 @@ Game.prototype = {
 	},
 
 	mouseMove: function(mouse) {
-		this.mouse = {
+		var worldPos = {
 			x: mouse.data.global.x - this.world.camera.position.x,
 			y: mouse.data.global.y - this.world.camera.position.y
 		};
 
-		console.log ("(" + this.mouse.x + ", " + this.mouse.y + ")");
+		this.mouse = {
+			x: Math.floor((worldPos.x) / 32),
+			y: Math.floor((worldPos.y) / 32)
+		};
 	},
 
 	update: function() {
@@ -425,6 +429,7 @@ module.exports = Game;
 'use strict';
 
 var Identification = require('../gui/id.js');
+var MousePos = require("../gui/mousepos.js");
 
 /**
  * GUI constructor
@@ -444,6 +449,11 @@ var GUI = function(game) {
 	 * @type {Stats}
 	 */
 	this.stats = null;
+
+	/**
+	 * @type {PIXI.Container}
+	 */
+	this.mousepos = null;
 
 	// self initialize
 	this.initialize();
@@ -471,13 +481,35 @@ GUI.prototype.initialize = function() {
 	id.initialize();
 	this.addChild(id);
 
+	this.mousepos = new MousePos(this.game);
+	this.mousepos.initialize();
+	this.addChild(this.mousepos);
+
+	this.game.renderer.plugins.interaction.on(
+		"mousemove", this.mouseMove.bind(this)
+	);
+
 	// attach this to the root scene
 	this.game.container.addChild(this);
 };
 
+GUI.prototype.mouseMove = function(mouse) {
+	var worldPos = {
+		x: mouse.data.global.x - this.game.world.camera.position.x,
+		y: mouse.data.global.y - this.game.world.camera.position.y
+	};
+
+	this.mouse = {
+		x: Math.floor((worldPos.x) / 32),
+		y: Math.floor((worldPos.y) / 32)
+	};
+
+	this.mousepos.update(this.mouse);
+},
+
 module.exports = GUI;
 
-},{"../gui/id.js":10}],10:[function(require,module,exports){
+},{"../gui/id.js":10,"../gui/mousepos.js":11}],10:[function(require,module,exports){
 'use strict';
 
 /**
@@ -521,5 +553,55 @@ Identification.prototype.initialize = function() {
 };
 
 module.exports = Identification;
+
+},{}],11:[function(require,module,exports){
+'use strict';
+
+/**
+ * MousePos constructor
+ * @param {Game} game reference to game object
+ */
+var MousePos = function(game) {
+
+	// inherit from PIXI.Container
+	PIXI.Container.call(this);
+
+	/**
+	 * @type {Game}
+	 */
+	this.game = game;
+
+	this.text = null;
+
+};
+
+// inherit PIXI.Container prototype
+MousePos.prototype = Object.create(PIXI.Container.prototype);
+MousePos.prototype.constructor = MousePos;
+
+/**
+ * initialize Identification object
+ */
+MousePos.prototype.initialize = function() {
+	this.text = new PIXI.Text(
+		{
+			fontFamily: "Courier New",
+			fontSize: 12,
+			fill: 0xffffff,
+			align: "left"
+		}
+	);
+
+	this.text.position.x = 15
+	this.text.position.y = this.game.height-48;
+
+	this.addChild(this.text);
+};
+
+MousePos.prototype.update = function(position) {
+	this.text.text = ("Mouse Position : ("+position.x+", "+position.y+")");
+};
+
+module.exports = MousePos;
 
 },{}]},{},[7])

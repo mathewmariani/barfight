@@ -1,6 +1,7 @@
 'use strict';
 
 var Identification = require('../gui/id.js');
+var MousePos = require("../gui/mousepos.js");
 
 /**
  * GUI constructor
@@ -20,6 +21,11 @@ var GUI = function(game) {
 	 * @type {Stats}
 	 */
 	this.stats = null;
+
+	/**
+	 * @type {PIXI.Container}
+	 */
+	this.mousepos = null;
 
 	// self initialize
 	this.initialize();
@@ -47,8 +53,30 @@ GUI.prototype.initialize = function() {
 	id.initialize();
 	this.addChild(id);
 
+	this.mousepos = new MousePos(this.game);
+	this.mousepos.initialize();
+	this.addChild(this.mousepos);
+
+	this.game.renderer.plugins.interaction.on(
+		"mousemove", this.mouseMove.bind(this)
+	);
+
 	// attach this to the root scene
 	this.game.container.addChild(this);
 };
+
+GUI.prototype.mouseMove = function(mouse) {
+	var worldPos = {
+		x: mouse.data.global.x - this.game.world.camera.position.x,
+		y: mouse.data.global.y - this.game.world.camera.position.y
+	};
+
+	this.mouse = {
+		x: Math.floor((worldPos.x) / 32),
+		y: Math.floor((worldPos.y) / 32)
+	};
+
+	this.mousepos.update(this.mouse);
+},
 
 module.exports = GUI;
