@@ -62,8 +62,8 @@ Map.prototype.initialize = function() {
 
 			// FIXME: these values shouldn't be "magic" numbers
 			// acutally, they could be; soo we'll see?
-			tile.sprite.position.x = x * 32;
-			tile.sprite.position.y = y * 32;
+			tile.sprite.position.x = x * this.game.settings.tilesize;
+			tile.sprite.position.y = y * this.game.settings.tilesize;
 			this.addChild(tile.sprite);
 
 			this.nodes[y][x] = tile;

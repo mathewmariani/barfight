@@ -28,7 +28,7 @@ Rectangle.prototype = {
 	contains: function(x, y) {
 		return(
 			(this.x < x && x < this.right) &&
-			(this.y < y && y < this.bottom)
+			(this.y > y && y > this.bottom)
 		);
 	},
 
