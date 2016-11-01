@@ -20,32 +20,34 @@ module.exports = Batch;
 },{}],2:[function(require,module,exports){
 'use strict';
 
+var Rectangle = require("../math/rectangle.js");
+var Vector2 = require("../math/vector2.js");
+
 /**
  * Camera constructor
  * @param {Game} game reference to game object
  */
 var Camera = function(game) {
+	
 	/**
 	 * @type {Game}
 	 */
 	this.game = game;
 
-	// FIXME: use vectors
-	this.position = {
-		x: 0, y: 0
-	};
+	/**
+	 * @type {Vector2}
+	 */
+	this.position = new Vector2(0,0);
 
-	// TODO: right now the camera is a single point (this.position)
-	// it needs to have a viewport so we can use its center
-	// NOTE: right now the camera's top-left is where the position is set
-	// TODO: add zoom or "scale"
-
-	// FIXME: use rectangles
-	this.viewport = {
-		x: 0, y: 0,
-		w: game.width,
-		h: game.height
-	};
+	/**
+	 * @type {Rectangle}
+	 */
+	this.viewport = new Rectangle(
+		this.position.x * (this.game.settings.tilesize * this.game.settings.scale),
+		this.position.y * (this.game.settings.tilesize * this.game.settings.scale),
+		game.width,
+		game.height
+	);
 
 };
 
@@ -53,7 +55,6 @@ Camera.prototype = {
 	update: function() {
 		// NOTE: for now just circle around the origin (0,0)
 		var angle = 1 * this.game.timer.elapsedTime;
-
 		this.position.x = (this.viewport.w / 2) - Math.cos(angle)*32;
 		this.position.y = (this.viewport.h / 2) - Math.sin(angle)*32;
 	}
@@ -61,7 +62,7 @@ Camera.prototype = {
 
 module.exports = Camera;
 
-},{}],3:[function(require,module,exports){
+},{"../math/rectangle.js":14,"../math/vector2.js":15}],3:[function(require,module,exports){
 'use strict';
 
 /**
@@ -96,6 +97,7 @@ module.exports = Entity;
 
 var Batch = require("./batch.js");
 var Tile = require("./tile.js");
+var Rectangle = require("../math/rectangle.js");
 
 /**
  * Map constructor
@@ -111,8 +113,8 @@ var Map = function(game, x, y, w, h) {
 	//PIXI.particles.ParticleContainer.call(this);
 	PIXI.Container.call(this);
 
-	this.x = 0;
-	this.y = 0;
+	this.x = x || 0;
+	this.y = y || 0;
 	this.w = w || 0;
 	this.h = h || 0;
 
@@ -121,18 +123,11 @@ var Map = function(game, x, y, w, h) {
 	 */
 	this.game = game;
 
-	// TODO: we can combine tiles and other_tiles into a single array.
-	// it would contain data for movement and ect..
-
-	/**
-	 * @type {Array}
-	 */
-	this.tiles = [];
-
-	/**
-	 * @type {Array}
-	 */
-	this.other_tiles = [];
+	this.rectangle = new Rectangle(
+		this.x, this.y,
+		this.w * (game.settings.tilesize * this.game.settings.scale),
+		this.w * (game.settings.tilesize * this.game.settings.scale)
+	);
 
 	/**
 	 * @type {Array}
@@ -187,7 +182,7 @@ Map.prototype.removeEntity = function(x, y, entity) {
 
 module.exports = Map;
 
-},{"./batch.js":1,"./tile.js":5}],5:[function(require,module,exports){
+},{"../math/rectangle.js":14,"./batch.js":1,"./tile.js":5}],5:[function(require,module,exports){
 'use strict';
 
 /**
@@ -286,6 +281,9 @@ World.prototype.initialize = function() {
 
 	// create the camera object
 	this.camera = new Camera(this.game);
+
+	// The scale factor of the world, and all its children.
+	this.scale = new PIXI.Point(this.game.settings.scale, this.game.settings.scale);
 
 	// attach this to the root scene
 	this.game.container.addChild(this);
@@ -401,7 +399,8 @@ var Game = function() {
 	this.mouse = null;
 
 	this.settings = {
-		tilesize: 32
+		tilesize: 32,
+		scale: 1.5
 	};
 
 	// self load
@@ -411,6 +410,7 @@ var Game = function() {
 Game.prototype = {
 
 	load: function() {
+		PIXI.SCALE_MODES.DEFAULT = PIXI.SCALE_MODES.NEAREST;
 		this.loader = new PIXI.loaders.Loader();
 
 		var assets = ["assets/image.json"];
@@ -495,7 +495,7 @@ module.exports = Game;
 },{"../core/entity.js":3,"../core/map.js":4,"../core/timer.js":6,"../core/world.js":7,"../gui/gui.js":10}],10:[function(require,module,exports){
 'use strict';
 
-var Identification = require('../gui/id.js');
+var Identification = require("../gui/id.js");
 var MousePos = require("../gui/mousepos.js");
 var Tooltip = require("../gui/tooltip.js");
 
@@ -578,20 +578,17 @@ GUI.prototype.mouseMove = function(mouse) {
 	};
 
 	this.mouse = {
-		x: Math.floor((worldPos.x) / 32),
-		y: Math.floor((worldPos.y) / 32)
+		x: Math.floor((worldPos.x) / (this.game.settings.tilesize * this.game.settings.scale)),
+		y: Math.floor((worldPos.y) / (this.game.settings.tilesize * this.game.settings.scale))
 	};
 
 	this.mousepos.update(this.mouse);
 
-	// pukes...
-	// FIXME: make sure were within the bounds of the map.
-	try {
+	if (this.game.map.rectangle.contains(worldPos.x, worldPos.y)) {
 		this.tooltip.update(
 			this.game.map.nodes[this.mouse.y][this.mouse.x].entities.length
 		);
-	}
-	catch(err) {
+	} else {
 		this.tooltip.update("?");
 	}
 },
@@ -747,5 +744,112 @@ Tooltip.prototype.update = function(value) {
 };
 
 module.exports = Tooltip;
+
+},{}],14:[function(require,module,exports){
+'use strict';
+
+/**
+ * Rectangle constructor
+ * @param {Number} x the x position of this Rectangle
+ * @param {Number} y the y position of this Rectangle
+ * @param {Number} w the width of this Rectangle
+ * @param {Number} h the height of this Rectangle
+ */
+var Rectangle = function(x, y, w, h) {
+	this.x = x || 0;
+	this.y = y || 0;
+	this.w = w || 0;
+	this.h = h || 0;
+
+	this.right = (this.x + this.w);
+	this.bottom = (this.y + this.h);
+};
+
+Rectangle.prototype = {
+
+	/**
+	 * Returns true if x and y coordinates is a point inside this rectangle
+	 * @param  {Number} x x-coordinate
+	 * @param  {Number} y y-coordinate
+	 * @return {Boolean}   returns true if the position is inside the rectangle
+	 */
+	contains: function(x, y) {
+		return(
+			(this.x < x && x < this.right) &&
+			(this.y < y && y < this.bottom)
+		);
+	},
+
+	/**
+	 * Does another rectangle intersect with this rectangle?
+	 * @param  {Rectangle} other The rectangle to check against
+	 * @return {Boolean}       Returns true if the rectangles are overlapping, returns false otherwise.
+	 */
+	intersects: function(other) {
+		return(
+			(this.x < other.right && other.x < this.right) &&
+			(this.y < other.bottom &&	other.y < this.bottom)
+		);
+	}
+};
+
+module.exports = Rectangle;
+
+},{}],15:[function(require,module,exports){
+'use strict';
+
+/**
+ * Vector2 constructor
+ * @param {Number} x the x-coordinate of this Vector2
+ * @param {Number} y the y-coordiante of this Vector2
+ */
+var Vector2 = function(x, y) {
+	this.x = x || 0;
+	this.y = y || 0;
+};
+
+Vector2.prototype = {
+	copy: function() {
+		return(new Vector2(this.x, this.y));
+	},
+
+	add: function(other) {
+		this.x += other.x;
+		this.y += other.y;
+	},
+
+	subtract: function(other) {
+		this.x -= other.x;
+		this.y -= other.y;
+	},
+
+	multiply: function(c) {
+		this.x *= c;
+		this.y *= c;
+	},
+
+	divide: function(c) {
+		this.x /= c;
+		this.y /= c;
+	},
+
+	scale: function(other) {
+		this.x *= other.x;
+		this.y *= other.y;
+	},
+
+	distance: function(other) {
+		dx = Math.abs(this.x - other.x);
+		dy = Math.abs(this.y - other.y);
+
+		return Math.sqrt(dx*dx + dy*dy);
+	},
+
+	toString: function() {
+		return("(" + this.x + ", " + this.y + ")");
+	}
+};
+
+module.exports = Vector2;
 
 },{}]},{},[8])

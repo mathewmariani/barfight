@@ -62,7 +62,8 @@ var Game = function() {
 	this.mouse = null;
 
 	this.settings = {
-		tilesize: 32
+		tilesize: 32,
+		scale: 1.5
 	};
 
 	// self load
@@ -72,6 +73,7 @@ var Game = function() {
 Game.prototype = {
 
 	load: function() {
+		PIXI.SCALE_MODES.DEFAULT = PIXI.SCALE_MODES.NEAREST;
 		this.loader = new PIXI.loaders.Loader();
 
 		var assets = ["assets/image.json"];

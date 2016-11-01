@@ -16,35 +16,35 @@ Vector2.prototype = {
 	},
 
 	add: function(other) {
-		this.x += other.x
-		this.y += other.y
+		this.x += other.x;
+		this.y += other.y;
 	},
 
 	subtract: function(other) {
-		this.x -= other.x
-		this.y -= other.y
+		this.x -= other.x;
+		this.y -= other.y;
 	},
 
 	multiply: function(c) {
-		this.x *= c
-		this.y *= c
+		this.x *= c;
+		this.y *= c;
 	},
 
 	divide: function(c) {
-		this.x /= c
-		this.y /= c
-	}.
+		this.x /= c;
+		this.y /= c;
+	},
 
 	scale: function(other) {
-		this.x *= other.x
-		this.y *= other.y
+		this.x *= other.x;
+		this.y *= other.y;
 	},
 
 	distance: function(other) {
-		dx = Math.abs(this.x - other.x)
-		dy = Math.abs(this.y - other.y)
+		dx = Math.abs(this.x - other.x);
+		dy = Math.abs(this.y - other.y);
 
-		return Math.sqrt(dx*dx + dy*dy)
+		return Math.sqrt(dx*dx + dy*dy);
 	},
 
 	toString: function() {

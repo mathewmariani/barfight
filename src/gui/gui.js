@@ -1,6 +1,6 @@
 'use strict';
 
-var Identification = require('../gui/id.js');
+var Identification = require("../gui/id.js");
 var MousePos = require("../gui/mousepos.js");
 var Tooltip = require("../gui/tooltip.js");
 
@@ -83,20 +83,17 @@ GUI.prototype.mouseMove = function(mouse) {
 	};
 
 	this.mouse = {
-		x: Math.floor((worldPos.x) / 32),
-		y: Math.floor((worldPos.y) / 32)
+		x: Math.floor((worldPos.x) / (this.game.settings.tilesize * this.game.settings.scale)),
+		y: Math.floor((worldPos.y) / (this.game.settings.tilesize * this.game.settings.scale))
 	};
 
 	this.mousepos.update(this.mouse);
 
-	// pukes...
-	// FIXME: make sure were within the bounds of the map.
-	try {
+	if (this.game.map.rectangle.contains(worldPos.x, worldPos.y)) {
 		this.tooltip.update(
 			this.game.map.nodes[this.mouse.y][this.mouse.x].entities.length
 		);
-	}
-	catch(err) {
+	} else {
 		this.tooltip.update("?");
 	}
 },

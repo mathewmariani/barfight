@@ -38,6 +38,9 @@ World.prototype.initialize = function() {
 	// create the camera object
 	this.camera = new Camera(this.game);
 
+	// The scale factor of the world, and all its children.
+	this.scale = new PIXI.Point(this.game.settings.scale, this.game.settings.scale);
+
 	// attach this to the root scene
 	this.game.container.addChild(this);
 };

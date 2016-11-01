@@ -2,6 +2,7 @@
 
 var Batch = require("./batch.js");
 var Tile = require("./tile.js");
+var Rectangle = require("../math/rectangle.js");
 
 /**
  * Map constructor
@@ -17,8 +18,8 @@ var Map = function(game, x, y, w, h) {
 	//PIXI.particles.ParticleContainer.call(this);
 	PIXI.Container.call(this);
 
-	this.x = 0;
-	this.y = 0;
+	this.x = x || 0;
+	this.y = y || 0;
 	this.w = w || 0;
 	this.h = h || 0;
 
@@ -27,18 +28,11 @@ var Map = function(game, x, y, w, h) {
 	 */
 	this.game = game;
 
-	// TODO: we can combine tiles and other_tiles into a single array.
-	// it would contain data for movement and ect..
-
-	/**
-	 * @type {Array}
-	 */
-	this.tiles = [];
-
-	/**
-	 * @type {Array}
-	 */
-	this.other_tiles = [];
+	this.rectangle = new Rectangle(
+		this.x, this.y,
+		this.w * (game.settings.tilesize * this.game.settings.scale),
+		this.w * (game.settings.tilesize * this.game.settings.scale)
+	);
 
 	/**
 	 * @type {Array}
