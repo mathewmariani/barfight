@@ -95,6 +95,7 @@ module.exports = Entity;
 'use strict';
 
 var Batch = require("./batch.js");
+var Tile = require("./tile.js");
 
 /**
  * Map constructor
@@ -120,7 +121,23 @@ var Map = function(game, x, y, w, h) {
 	 */
 	this.game = game;
 
+	// TODO: we can combine tiles and other_tiles into a single array.
+	// it would contain data for movement and ect..
+
+	/**
+	 * @type {Array}
+	 */
 	this.tiles = [];
+
+	/**
+	 * @type {Array}
+	 */
+	this.other_tiles = [];
+
+	/**
+	 * @type {Array}
+	 */
+	this.nodes = [];
 
 	this.entities = new Batch();
 };
@@ -133,33 +150,83 @@ Map.prototype.constructor = Map;
 
 Map.prototype.initialize = function() {
 	for(var y = 0; y < this.h; ++y) {
-		this.tiles[y] = [];
+		this.nodes[y] = [];
 		for(var x = 0; x < this.w; ++x) {
-			var tile = null;
+			var tile = new Tile();
 			var id = this.game.loader.resources["assets/image.json"].textures;
 			if(y === 0 || y === this.h - 1 || x === 0 || x === this.w - 1) {
-				tile = new PIXI.Sprite(id["blue.png"]);
+				tile.sprite = new PIXI.Sprite(id["blue.png"]);
 			} else {
-				tile = new PIXI.Sprite(id["pink.png"]);
+				tile.sprite = new PIXI.Sprite(id["pink.png"]);
 			}
 
 			// FIXME: these values shouldn't be "magic" numbers
 			// acutally, they could be; soo we'll see?
-			tile.position.x = x * 32;
-			tile.position.y = y * 32;
-			this.addChild(tile);
+			tile.sprite.position.x = x * 32;
+			tile.sprite.position.y = y * 32;
+			this.addChild(tile.sprite);
 
-			this.tiles[y][x] = tile;
-
+			this.nodes[y][x] = tile;
 		}
 	}
 
 	this.game.world.addChild(this);
 };
 
+Map.prototype.addEntity = function(x, y, entity) {
+	entity.sprite.position.x = x * 32;
+	entity.sprite.position.y = y * 32;
+
+	this.nodes[y][x].addEntity(entity);
+	this.entities.addChild(entity.sprite);
+};
+
+Map.prototype.removeEntity = function(x, y, entity) {
+	this.entities.removeChild(entity.sprite);
+};
+
 module.exports = Map;
 
-},{"./batch.js":1}],5:[function(require,module,exports){
+},{"./batch.js":1,"./tile.js":5}],5:[function(require,module,exports){
+'use strict';
+
+/**
+ * Tile constructor
+ */
+var Tile = function() {
+
+  /**
+   * @type {PIXI.Sprite}
+   */
+  this.sprite = null;
+
+  /**
+   * @type {Array}
+   */
+  this.entities = [];
+
+};
+
+Tile.prototype = {
+  addEntity: function(entity) {
+    this.entities.push(entity);
+  },
+
+  removeEntity: function(entity) {
+    var index = this.entities.indexOf(entity);
+
+    if (index !== -1) {
+      this.entities.splice(index, 1);
+      return true;
+    }
+
+    return false;
+  }
+};
+
+module.exports = Tile;
+
+},{}],6:[function(require,module,exports){
 'use strict';
 
 /**
@@ -179,7 +246,7 @@ Timer.prototype = {
 
 module.exports = Timer;
 
-},{}],6:[function(require,module,exports){
+},{}],7:[function(require,module,exports){
 'use strict';
 
 var Camera = require('./camera.js');
@@ -237,7 +304,7 @@ World.prototype.update = function() {
 
 module.exports = World;
 
-},{"./camera.js":2}],7:[function(require,module,exports){
+},{"./camera.js":2}],8:[function(require,module,exports){
 'use strict';
 
 var Game = require('./game/game.js');
@@ -269,7 +336,7 @@ window.addEventListener("load", initialize);
 
 module.exports = initialize;
 
-},{"./game/game.js":8}],8:[function(require,module,exports){
+},{"./game/game.js":9}],9:[function(require,module,exports){
 'use strict';
 
 var GUI = require('../gui/gui.js');
@@ -390,7 +457,7 @@ Game.prototype = {
 		this.map.initialize();
 
 		var entity = new Entity(this);
-		this.map.entities.addChild(entity.sprite);
+		this.map.addEntity(2, 2, entity);
 
 		this.world.addChild(this.map.entities);
 	},
@@ -425,11 +492,12 @@ Game.prototype = {
 
 module.exports = Game;
 
-},{"../core/entity.js":3,"../core/map.js":4,"../core/timer.js":5,"../core/world.js":6,"../gui/gui.js":9}],9:[function(require,module,exports){
+},{"../core/entity.js":3,"../core/map.js":4,"../core/timer.js":6,"../core/world.js":7,"../gui/gui.js":10}],10:[function(require,module,exports){
 'use strict';
 
 var Identification = require('../gui/id.js');
 var MousePos = require("../gui/mousepos.js");
+var Tooltip = require("../gui/tooltip.js");
 
 /**
  * GUI constructor
@@ -454,6 +522,12 @@ var GUI = function(game) {
 	 * @type {PIXI.Container}
 	 */
 	this.mousepos = null;
+
+	/**
+	 * @type {PIXI.Container}
+	 */
+	this.tooltip = null;
+
 
 	// self initialize
 	this.initialize();
@@ -485,6 +559,10 @@ GUI.prototype.initialize = function() {
 	this.mousepos.initialize();
 	this.addChild(this.mousepos);
 
+	this.tooltip = new Tooltip(this.game);
+	this.tooltip.initialize();
+	this.addChild(this.tooltip);
+
 	this.game.renderer.plugins.interaction.on(
 		"mousemove", this.mouseMove.bind(this)
 	);
@@ -505,11 +583,22 @@ GUI.prototype.mouseMove = function(mouse) {
 	};
 
 	this.mousepos.update(this.mouse);
+
+	// pukes...
+	// FIXME: make sure were within the bounds of the map.
+	try {
+		this.tooltip.update(
+			this.game.map.nodes[this.mouse.y][this.mouse.x].entities.length
+		);
+	}
+	catch(err) {
+		this.tooltip.update("?");
+	}
 },
 
 module.exports = GUI;
 
-},{"../gui/id.js":10,"../gui/mousepos.js":11}],10:[function(require,module,exports){
+},{"../gui/id.js":11,"../gui/mousepos.js":12,"../gui/tooltip.js":13}],11:[function(require,module,exports){
 'use strict';
 
 /**
@@ -554,7 +643,7 @@ Identification.prototype.initialize = function() {
 
 module.exports = Identification;
 
-},{}],11:[function(require,module,exports){
+},{}],12:[function(require,module,exports){
 'use strict';
 
 /**
@@ -584,6 +673,7 @@ MousePos.prototype.constructor = MousePos;
  */
 MousePos.prototype.initialize = function() {
 	this.text = new PIXI.Text(
+		"Mouse Position : (?, ?)",
 		{
 			fontFamily: "Courier New",
 			fontSize: 12,
@@ -604,4 +694,58 @@ MousePos.prototype.update = function(position) {
 
 module.exports = MousePos;
 
-},{}]},{},[7])
+},{}],13:[function(require,module,exports){
+'use strict';
+
+/**
+ * Tooltip constructor
+ * @param {Game} game reference to game object
+ */
+var Tooltip = function(game) {
+
+	// inherit from PIXI.Container
+	PIXI.Container.call(this);
+
+	/**
+	 * @type {Game}
+	 */
+	this.game = game;
+
+  /**
+   * @type {PIXI.Text}
+   */
+	this.text = null;
+
+};
+
+// inherit PIXI.Container prototype
+Tooltip.prototype = Object.create(PIXI.Container.prototype);
+Tooltip.prototype.constructor = Tooltip;
+
+/**
+ * initialize Identification object
+ */
+Tooltip.prototype.initialize = function() {
+	this.text = new PIXI.Text(
+		"Tooltip : ?",
+		{
+			fontFamily: "Courier New",
+			fontSize: 12,
+			fill: 0xffffff,
+			align: "left"
+		}
+	);
+
+	this.text.position.x = 15
+	this.text.position.y = this.game.height-72;
+
+	this.addChild(this.text);
+};
+
+Tooltip.prototype.update = function(value) {
+	this.text.text = ("Tooltip : there are "+value+" entities here.");
+};
+
+module.exports = Tooltip;
+
+},{}]},{},[8])

@@ -2,6 +2,7 @@
 
 var Identification = require('../gui/id.js');
 var MousePos = require("../gui/mousepos.js");
+var Tooltip = require("../gui/tooltip.js");
 
 /**
  * GUI constructor
@@ -26,6 +27,12 @@ var GUI = function(game) {
 	 * @type {PIXI.Container}
 	 */
 	this.mousepos = null;
+
+	/**
+	 * @type {PIXI.Container}
+	 */
+	this.tooltip = null;
+
 
 	// self initialize
 	this.initialize();
@@ -57,6 +64,10 @@ GUI.prototype.initialize = function() {
 	this.mousepos.initialize();
 	this.addChild(this.mousepos);
 
+	this.tooltip = new Tooltip(this.game);
+	this.tooltip.initialize();
+	this.addChild(this.tooltip);
+
 	this.game.renderer.plugins.interaction.on(
 		"mousemove", this.mouseMove.bind(this)
 	);
@@ -77,6 +88,17 @@ GUI.prototype.mouseMove = function(mouse) {
 	};
 
 	this.mousepos.update(this.mouse);
+
+	// pukes...
+	// FIXME: make sure were within the bounds of the map.
+	try {
+		this.tooltip.update(
+			this.game.map.nodes[this.mouse.y][this.mouse.x].entities.length
+		);
+	}
+	catch(err) {
+		this.tooltip.update("?");
+	}
 },
 
 module.exports = GUI;

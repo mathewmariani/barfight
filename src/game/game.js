@@ -118,7 +118,7 @@ Game.prototype = {
 		this.map.initialize();
 
 		var entity = new Entity(this);
-		this.map.entities.addChild(entity.sprite);
+		this.map.addEntity(2, 2, entity);
 
 		this.world.addChild(this.map.entities);
 	},
