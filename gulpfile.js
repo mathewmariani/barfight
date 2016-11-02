@@ -21,4 +21,15 @@ gulp.task('browserify', function() {
 		.pipe(browserSync.stream());
 });
 
+gulp.task('build_release', function() {
+  gulp.src("./index.html").pipe(gulp.dest("./build"));
+  gulp.src("./css/*").pipe(gulp.dest("./build/css"));
+  gulp.src("./assets/*").pipe(gulp.dest("./build/assets"));
+  gulp.src("./dist/*").pipe(gulp.dest("./build/dist"));
+
+  gulp.src('./src/app.js')
+    .pipe(browserify())
+    .pipe(gulp.dest('./build/dist'));
+});
+
 gulp.task('default', ['serve']);

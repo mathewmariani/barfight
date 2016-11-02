@@ -1,0 +1,11 @@
+language: node_js
+node_js:
+  - "iojs"
+sudo: false
+script:
+  - bash build.sh
+after_success:
+  - bash deploy.sh
+env:
+  global:
+  - NOKOGIRI_USE_SYSTEM_LIBRARIES=true # speeds up installation of html-proofer
