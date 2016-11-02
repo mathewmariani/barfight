@@ -25,7 +25,7 @@ Identification.prototype.constructor = Identification;
  */
 Identification.prototype.initialize = function() {
 			var text = new PIXI.Text(
-				"v0.0.0 pre-development",
+				"Barfight Roguelike v0.0.0 pre-development",
 				{
 					fontFamily: "Courier New",
 					fontSize: 12,

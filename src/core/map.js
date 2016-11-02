@@ -31,7 +31,7 @@ var Map = function(game, x, y, w, h) {
 	this.rectangle = new Rectangle(
 		this.x, this.y,
 		this.w * (game.settings.tilesize * this.game.settings.scale),
-		this.w * (game.settings.tilesize * this.game.settings.scale)
+		this.h * (game.settings.tilesize * this.game.settings.scale)
 	);
 
 	/**

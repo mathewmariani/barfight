@@ -5,6 +5,9 @@ var World = require('../core/world.js');
 var Map = require('../core/map.js');
 var Entity = require('../core/entity.js');
 var Timer = require('../core/timer.js');
+
+var Chair = require("./entities/chair.js");
+
 /**
  * Game constructor
  */
@@ -119,8 +122,9 @@ Game.prototype = {
 		this.map = new Map(this, 0,0,15,9);
 		this.map.initialize();
 
-		var entity = new Entity(this);
-		this.map.addEntity(2, 2, entity);
+		// NOTE: this can be done in a factory.
+		var chair = Chair.create(this);
+		this.map.addEntity(3, 3, chair);
 
 		this.world.addChild(this.map.entities);
 	},

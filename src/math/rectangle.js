@@ -26,9 +26,14 @@ Rectangle.prototype = {
 	 * @return {Boolean}   returns true if the position is inside the rectangle
 	 */
 	contains: function(x, y) {
-		return(
+		// return(
+		// 	(this.x < x && x < this.right) &&
+		// 	(this.y > y && y > this.bottom)
+		// );
+		//
+		return (
 			(this.x < x && x < this.right) &&
-			(this.y > y && y > this.bottom)
+			(this.y < y && y < this.bottom)
 		);
 	},
 

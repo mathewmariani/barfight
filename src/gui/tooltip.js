@@ -46,7 +46,7 @@ Tooltip.prototype.initialize = function() {
 };
 
 Tooltip.prototype.update = function(value) {
-	this.text.text = ("Tooltip : there are "+value+" entities here.");
+	this.text.text = ("Tooltip : " + value);
 };
 
 module.exports = Tooltip;

@@ -89,12 +89,18 @@ GUI.prototype.mouseMove = function(mouse) {
 
 	this.mousepos.update(this.mouse);
 
+	// FIXME: this is terrible - this code has over stayed its welcome.
 	if (this.game.map.rectangle.contains(worldPos.x, worldPos.y)) {
+		if (this.game.map.nodes[this.mouse.y][this.mouse.x].entities.length === 0) {
+			this.tooltip.update("(?)");
+			return;
+		}
+
 		this.tooltip.update(
-			this.game.map.nodes[this.mouse.y][this.mouse.x].entities.length
+			this.game.map.nodes[this.mouse.y][this.mouse.x].entities[0].name
 		);
 	} else {
-		this.tooltip.update("?");
+		this.tooltip.update("(?)");
 	}
 },
 

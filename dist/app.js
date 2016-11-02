@@ -62,16 +62,24 @@ Camera.prototype = {
 
 module.exports = Camera;
 
-},{"../math/rectangle.js":14,"../math/vector2.js":15}],3:[function(require,module,exports){
+},{"../math/rectangle.js":16,"../math/vector2.js":17}],3:[function(require,module,exports){
 'use strict';
 
 /**
  * Entity constructor
  * @param {Game} game   reference to game object
  */
-var Entity = function(game, sprite) {
+var Entity = function(game, name) {
 
+	/**
+	 * @type {Game}
+	 */
 	this.game = game;
+
+	/**
+	 * @type {String}
+	 */
+	this.name = name;
 
 	var texture = this.game.loader.resources["assets/image.json"].textures;
 
@@ -80,6 +88,10 @@ var Entity = function(game, sprite) {
 	 */
 	this.sprite = new PIXI.Sprite(texture["yellow.png"]);
 
+	// NOTE: this is a quick an easy entity system.
+	// I would prefer using a data-oriented version.
+	this.components = {};
+
 	// set the position
 	this.sprite.position.x = 0;
 	this.sprite.position.y = 0;
@@ -87,7 +99,17 @@ var Entity = function(game, sprite) {
 };
 
 Entity.prototype = {
+	addComponent: function(component) {
+			this.components[component.name] = component;
+	},
 
+	removeComponent: function(component) {
+		delete this.components[component.name];
+	},
+
+	getComponent: function(name) {
+		return this.components[name];
+	}
 };
 
 module.exports = Entity;
@@ -126,7 +148,7 @@ var Map = function(game, x, y, w, h) {
 	this.rectangle = new Rectangle(
 		this.x, this.y,
 		this.w * (game.settings.tilesize * this.game.settings.scale),
-		this.w * (game.settings.tilesize * this.game.settings.scale)
+		this.h * (game.settings.tilesize * this.game.settings.scale)
 	);
 
 	/**
@@ -182,7 +204,7 @@ Map.prototype.removeEntity = function(x, y, entity) {
 
 module.exports = Map;
 
-},{"../math/rectangle.js":14,"./batch.js":1,"./tile.js":5}],5:[function(require,module,exports){
+},{"../math/rectangle.js":16,"./batch.js":1,"./tile.js":5}],5:[function(require,module,exports){
 'use strict';
 
 /**
@@ -334,7 +356,35 @@ window.addEventListener("load", initialize);
 
 module.exports = initialize;
 
-},{"./game/game.js":9}],9:[function(require,module,exports){
+},{"./game/game.js":11}],9:[function(require,module,exports){
+'use strict';
+
+var Position = function() {
+  this.name = "position";
+};
+
+module.exports = Position;
+
+},{}],10:[function(require,module,exports){
+'use strict';
+
+var Entity = require("../../core/entity.js");
+var Position = require("../components/position.js");
+
+var Chair = {
+	create: function(game) {
+
+		var entity = new Entity(game, "chair");
+    entity.addComponent(new Position());
+
+		//Return the entity
+		return entity;
+	}
+};
+
+module.exports = Chair;
+
+},{"../../core/entity.js":3,"../components/position.js":9}],11:[function(require,module,exports){
 'use strict';
 
 var GUI = require('../gui/gui.js');
@@ -342,6 +392,9 @@ var World = require('../core/world.js');
 var Map = require('../core/map.js');
 var Entity = require('../core/entity.js');
 var Timer = require('../core/timer.js');
+
+var Chair = require("./entities/chair.js");
+
 /**
  * Game constructor
  */
@@ -456,8 +509,9 @@ Game.prototype = {
 		this.map = new Map(this, 0,0,15,9);
 		this.map.initialize();
 
-		var entity = new Entity(this);
-		this.map.addEntity(2, 2, entity);
+		// NOTE: this can be done in a factory.
+		var chair = Chair.create(this);
+		this.map.addEntity(3, 3, chair);
 
 		this.world.addChild(this.map.entities);
 	},
@@ -492,7 +546,7 @@ Game.prototype = {
 
 module.exports = Game;
 
-},{"../core/entity.js":3,"../core/map.js":4,"../core/timer.js":6,"../core/world.js":7,"../gui/gui.js":10}],10:[function(require,module,exports){
+},{"../core/entity.js":3,"../core/map.js":4,"../core/timer.js":6,"../core/world.js":7,"../gui/gui.js":12,"./entities/chair.js":10}],12:[function(require,module,exports){
 'use strict';
 
 var Identification = require("../gui/id.js");
@@ -584,18 +638,24 @@ GUI.prototype.mouseMove = function(mouse) {
 
 	this.mousepos.update(this.mouse);
 
+	// FIXME: this is terrible - this code has over stayed its welcome.
 	if (this.game.map.rectangle.contains(worldPos.x, worldPos.y)) {
+		if (this.game.map.nodes[this.mouse.y][this.mouse.x].entities.length === 0) {
+			this.tooltip.update("(?)");
+			return;
+		}
+
 		this.tooltip.update(
-			this.game.map.nodes[this.mouse.y][this.mouse.x].entities.length
+			this.game.map.nodes[this.mouse.y][this.mouse.x].entities[0].name
 		);
 	} else {
-		this.tooltip.update("?");
+		this.tooltip.update("(?)");
 	}
 },
 
 module.exports = GUI;
 
-},{"../gui/id.js":11,"../gui/mousepos.js":12,"../gui/tooltip.js":13}],11:[function(require,module,exports){
+},{"../gui/id.js":13,"../gui/mousepos.js":14,"../gui/tooltip.js":15}],13:[function(require,module,exports){
 'use strict';
 
 /**
@@ -623,7 +683,7 @@ Identification.prototype.constructor = Identification;
  */
 Identification.prototype.initialize = function() {
 			var text = new PIXI.Text(
-				"v0.0.0 pre-development",
+				"Barfight Roguelike v0.0.0 pre-development",
 				{
 					fontFamily: "Courier New",
 					fontSize: 12,
@@ -640,7 +700,7 @@ Identification.prototype.initialize = function() {
 
 module.exports = Identification;
 
-},{}],12:[function(require,module,exports){
+},{}],14:[function(require,module,exports){
 'use strict';
 
 /**
@@ -691,7 +751,7 @@ MousePos.prototype.update = function(position) {
 
 module.exports = MousePos;
 
-},{}],13:[function(require,module,exports){
+},{}],15:[function(require,module,exports){
 'use strict';
 
 /**
@@ -740,12 +800,12 @@ Tooltip.prototype.initialize = function() {
 };
 
 Tooltip.prototype.update = function(value) {
-	this.text.text = ("Tooltip : there are "+value+" entities here.");
+	this.text.text = ("Tooltip : " + value);
 };
 
 module.exports = Tooltip;
 
-},{}],14:[function(require,module,exports){
+},{}],16:[function(require,module,exports){
 'use strict';
 
 /**
@@ -774,9 +834,14 @@ Rectangle.prototype = {
 	 * @return {Boolean}   returns true if the position is inside the rectangle
 	 */
 	contains: function(x, y) {
-		return(
+		// return(
+		// 	(this.x < x && x < this.right) &&
+		// 	(this.y > y && y > this.bottom)
+		// );
+		//
+		return (
 			(this.x < x && x < this.right) &&
-			(this.y > y && y > this.bottom)
+			(this.y < y && y < this.bottom)
 		);
 	},
 
@@ -795,7 +860,7 @@ Rectangle.prototype = {
 
 module.exports = Rectangle;
 
-},{}],15:[function(require,module,exports){
+},{}],17:[function(require,module,exports){
 'use strict';
 
 /**
