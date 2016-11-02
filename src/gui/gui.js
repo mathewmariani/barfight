@@ -91,7 +91,7 @@ GUI.prototype.mouseMove = function(mouse) {
 	// FIXME: this is terrible - this code has over stayed its welcome.
 	if (this.game.map.rectangle.contains(worldPos.x, worldPos.y)) {
 		var ref = this.game.map.nodes[this.mouse.y][this.mouse.x].entities[0];
-		if (ref !== undefined && ref.hasComponent("tooltip")) {
+		if (ref && ref.hasComponent("tooltip")) {
 			this.tooltip.visible = true;
 			this.tooltip.update(ref);
 		} else {

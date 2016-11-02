@@ -62,14 +62,14 @@ Camera.prototype = {
 
 module.exports = Camera;
 
-},{"../math/rectangle.js":17,"../math/vector2.js":18}],3:[function(require,module,exports){
+},{"../math/rectangle.js":18,"../math/vector2.js":19}],3:[function(require,module,exports){
 'use strict';
 
 /**
  * Entity constructor
  * @param {Game} game   reference to game object
  */
-var Entity = function(game, name) {
+var Entity = function(game, name, sprite) {
 
 	/**
 	 * @type {Game}
@@ -86,7 +86,7 @@ var Entity = function(game, name) {
 	/**
 	 * @type {PIXI.Sprite}
 	 */
-	this.sprite = new PIXI.Sprite(texture["yellow.png"]);
+	this.sprite = new PIXI.Sprite(texture[sprite+".png"]);
 
 	// NOTE: this is a quick an easy entity system.
 	// I would prefer using a data-oriented version.
@@ -150,8 +150,14 @@ var Map = function(game, x, y, w, h) {
 	 */
 	this.game = game;
 
+	/**
+	 * @type {Number}
+	 */
 	this.tilesize = game.settings.tilesize;
 
+	/**
+	 * @type {Rectangle}
+	 */
 	this.rectangle = new Rectangle(
 		this.x, this.y,
 		this.w * (game.settings.tilesize * this.game.settings.scale),
@@ -163,6 +169,10 @@ var Map = function(game, x, y, w, h) {
 	 */
 	this.nodes = [];
 
+	/**
+	 * @type {Batch}
+	 * NOTE: this should be removed eventually
+	 */
 	this.entities = new Batch();
 };
 
@@ -215,7 +225,7 @@ Map.prototype.removeEntity = function(x, y, entity) {
 
 module.exports = Map;
 
-},{"../math/rectangle.js":17,"./batch.js":1,"./tile.js":5}],5:[function(require,module,exports){
+},{"../math/rectangle.js":18,"./batch.js":1,"./tile.js":5}],5:[function(require,module,exports){
 'use strict';
 
 /**
@@ -255,26 +265,6 @@ Tile.prototype = {
 module.exports = Tile;
 
 },{}],6:[function(require,module,exports){
-'use strict';
-
-/**
- * Timer constructor
- * NOTE: this might be useless...
- */
-var Timer = function() {
-	this.elapsedTime = 0;
-	this.startTime = Date.now();
-};
-
-Timer.prototype = {
-	update: function() {
-		this.elapsedTime = (Date.now() - this.startTime) / 1000;
-	}
-};
-
-module.exports = Timer;
-
-},{}],7:[function(require,module,exports){
 'use strict';
 
 var Camera = require('./camera.js');
@@ -335,7 +325,7 @@ World.prototype.update = function() {
 
 module.exports = World;
 
-},{"./camera.js":2}],8:[function(require,module,exports){
+},{"./camera.js":2}],7:[function(require,module,exports){
 'use strict';
 
 var Game = require('./game/game.js');
@@ -367,7 +357,19 @@ window.addEventListener("load", initialize);
 
 module.exports = initialize;
 
-},{"./game/game.js":12}],9:[function(require,module,exports){
+},{"./game/game.js":13}],8:[function(require,module,exports){
+'use strict';
+
+var Movement = function() {
+  this.name = "movement";
+
+  this.points = 0;
+};
+
+module.exports = Movement;
+ 
+
+},{}],9:[function(require,module,exports){
 'use strict';
 
 var Position = function() {
@@ -401,7 +403,7 @@ var Tooltip = require("../components/tooltip.js");
 var Chair = {
 	create: function(game, x, y) {
 
-		var entity = new Entity(game, "chair");
+		var entity = new Entity(game, "chair", "yellow");
     var position = entity.addComponent(new Position());
 		var tooltip = entity.addComponent(new Tooltip());
 
@@ -421,13 +423,49 @@ module.exports = Chair;
 },{"../../core/entity.js":3,"../components/position.js":9,"../components/tooltip.js":10}],12:[function(require,module,exports){
 'use strict';
 
-var GUI = require('../gui/gui.js');
-var World = require('../core/world.js');
-var Map = require('../core/map.js');
-var Entity = require('../core/entity.js');
-var Timer = require('../core/timer.js');
+var Entity = require("../../core/entity.js");
+var Position = require("../components/position.js");
+var Tooltip = require("../components/tooltip.js");
+var Movement = require("../components/movement.js");
 
+var Character = {
+	create: function(game, x, y) {
+
+		var entity = new Entity(game, "character", "orange");
+    var position = entity.addComponent(new Position());
+    var movement = entity.addComponent(new Movement());
+		var tooltip = entity.addComponent(new Tooltip());
+
+		position.x = x;
+		position.y = y;
+
+    movement.points = 3;
+
+		tooltip.title = "Character";
+		tooltip.desc = "It's either you or you're fighting it.";
+
+		//Return the entity
+		return entity;
+	}
+};
+
+module.exports = Character;
+
+},{"../../core/entity.js":3,"../components/movement.js":8,"../components/position.js":9,"../components/tooltip.js":10}],13:[function(require,module,exports){
+'use strict';
+
+// modules
+var Timer = require("../modules/timer.js");
+var Keyboard = require("../modules/keyboard.js");
+
+var GUI = require("../gui/gui.js");
+var World = require("../core/world.js");
+var Map = require("../core/map.js");
+var Entity = require("../core/entity.js");
+
+// entities
 var Chair = require("./entities/chair.js");
+var Character = require("./entities/character.js");
 
 /**
  * Game constructor
@@ -474,6 +512,11 @@ var Game = function() {
 	 * @type {Timer}
 	 */
 	this.timer = new Timer();
+
+	/**
+	 * @type {Keyboard}
+	 */
+	this.keyboard = new Keyboard();
 
 	/**
 	 * @type {PIXI.Renderer}
@@ -547,6 +590,10 @@ Game.prototype = {
 		var chair = Chair.create(this, 3, 3);
 		this.map.addEntity(chair);
 
+		// NOTE: this can be done in a factory.
+		var character = Character.create(this, 1, 1);
+		this.map.addEntity(character);
+
 		this.world.addChild(this.map.entities);
 	},
 
@@ -580,7 +627,7 @@ Game.prototype = {
 
 module.exports = Game;
 
-},{"../core/entity.js":3,"../core/map.js":4,"../core/timer.js":6,"../core/world.js":7,"../gui/gui.js":13,"./entities/chair.js":11}],13:[function(require,module,exports){
+},{"../core/entity.js":3,"../core/map.js":4,"../core/world.js":6,"../gui/gui.js":14,"../modules/keyboard.js":20,"../modules/timer.js":21,"./entities/chair.js":11,"./entities/character.js":12}],14:[function(require,module,exports){
 'use strict';
 
 var Identification = require("../gui/id.js");
@@ -674,7 +721,7 @@ GUI.prototype.mouseMove = function(mouse) {
 	// FIXME: this is terrible - this code has over stayed its welcome.
 	if (this.game.map.rectangle.contains(worldPos.x, worldPos.y)) {
 		var ref = this.game.map.nodes[this.mouse.y][this.mouse.x].entities[0];
-		if (ref !== undefined && ref.hasComponent("tooltip")) {
+		if (ref && ref.hasComponent("tooltip")) {
 			this.tooltip.visible = true;
 			this.tooltip.update(ref);
 		} else {
@@ -687,7 +734,7 @@ GUI.prototype.mouseMove = function(mouse) {
 
 module.exports = GUI;
 
-},{"../gui/id.js":14,"../gui/mousepos.js":15,"../gui/tooltip.js":16}],14:[function(require,module,exports){
+},{"../gui/id.js":15,"../gui/mousepos.js":16,"../gui/tooltip.js":17}],15:[function(require,module,exports){
 'use strict';
 
 /**
@@ -732,7 +779,7 @@ Identification.prototype.initialize = function() {
 
 module.exports = Identification;
 
-},{}],15:[function(require,module,exports){
+},{}],16:[function(require,module,exports){
 'use strict';
 
 /**
@@ -783,7 +830,7 @@ MousePos.prototype.update = function(position) {
 
 module.exports = MousePos;
 
-},{}],16:[function(require,module,exports){
+},{}],17:[function(require,module,exports){
 'use strict';
 
 /**
@@ -838,7 +885,7 @@ Tooltip.prototype.update = function(entity) {
 
 module.exports = Tooltip;
 
-},{}],17:[function(require,module,exports){
+},{}],18:[function(require,module,exports){
 'use strict';
 
 /**
@@ -893,7 +940,7 @@ Rectangle.prototype = {
 
 module.exports = Rectangle;
 
-},{}],18:[function(require,module,exports){
+},{}],19:[function(require,module,exports){
 'use strict';
 
 /**
@@ -950,4 +997,78 @@ Vector2.prototype = {
 
 module.exports = Vector2;
 
-},{}]},{},[8])
+},{}],20:[function(require,module,exports){
+'use strict';
+
+/**
+ * Keyboard constructor
+ */
+var Keyboard = function() {
+
+  /**
+   * @type {Object}
+   */
+  this.keys = {};
+
+  this.initialize();
+
+};
+
+Keyboard.prototype = {
+  initialize: function() {
+    var self = this;
+
+    /**
+    * keyup events
+    */
+    window.addEventListener("keydown", function(event) {
+      event.preventDefault();
+
+      var callbacks = self.keys[event.which];
+      if (callbacks) {
+        callbacks.forEach(function (callback) {
+          callback(data);
+        });
+      }
+    });
+
+    /**
+    * keyup events
+    */
+    window.addEventListener("keyup", function(event) {
+      event.preventDefault();
+    });
+  },
+
+  getKey: function(keycode, callback) {
+    if (!this.keys[keycode]) {
+      this.keys[keycode] = [];
+    }
+    this.keys[keycode].push(callback);
+  },
+
+};
+
+module.exports = Keyboard;
+
+},{}],21:[function(require,module,exports){
+'use strict';
+
+/**
+ * Timer constructor
+ * NOTE: this might be useless...
+ */
+var Timer = function() {
+	this.elapsedTime = 0;
+	this.startTime = Date.now();
+};
+
+Timer.prototype = {
+	update: function() {
+		this.elapsedTime = (Date.now() - this.startTime) / 1000;
+	}
+};
+
+module.exports = Timer;
+
+},{}]},{},[7])

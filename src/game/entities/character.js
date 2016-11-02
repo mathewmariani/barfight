@@ -3,23 +3,27 @@
 var Entity = require("../../core/entity.js");
 var Position = require("../components/position.js");
 var Tooltip = require("../components/tooltip.js");
+var Movement = require("../components/movement.js");
 
-var Chair = {
+var Character = {
 	create: function(game, x, y) {
 
-		var entity = new Entity(game, "chair", "yellow");
+		var entity = new Entity(game, "character", "orange");
     var position = entity.addComponent(new Position());
+    var movement = entity.addComponent(new Movement());
 		var tooltip = entity.addComponent(new Tooltip());
 
 		position.x = x;
 		position.y = y;
 
-		tooltip.title = "Chair";
-		tooltip.desc = "Ever notice when someone throws a chair a brawl starts off?";
+    movement.points = 3;
+
+		tooltip.title = "Character";
+		tooltip.desc = "It's either you or you're fighting it.";
 
 		//Return the entity
 		return entity;
 	}
 };
 
-module.exports = Chair;
+module.exports = Character;

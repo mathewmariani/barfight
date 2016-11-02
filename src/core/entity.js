@@ -4,7 +4,7 @@
  * Entity constructor
  * @param {Game} game   reference to game object
  */
-var Entity = function(game, name) {
+var Entity = function(game, name, sprite) {
 
 	/**
 	 * @type {Game}
@@ -21,7 +21,7 @@ var Entity = function(game, name) {
 	/**
 	 * @type {PIXI.Sprite}
 	 */
-	this.sprite = new PIXI.Sprite(texture["yellow.png"]);
+	this.sprite = new PIXI.Sprite(texture[sprite+".png"]);
 
 	// NOTE: this is a quick an easy entity system.
 	// I would prefer using a data-oriented version.

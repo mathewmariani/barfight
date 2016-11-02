@@ -1,12 +1,17 @@
 'use strict';
 
-var GUI = require('../gui/gui.js');
-var World = require('../core/world.js');
-var Map = require('../core/map.js');
-var Entity = require('../core/entity.js');
-var Timer = require('../core/timer.js');
+// modules
+var Timer = require("../modules/timer.js");
+var Keyboard = require("../modules/keyboard.js");
 
+var GUI = require("../gui/gui.js");
+var World = require("../core/world.js");
+var Map = require("../core/map.js");
+var Entity = require("../core/entity.js");
+
+// entities
 var Chair = require("./entities/chair.js");
+var Character = require("./entities/character.js");
 
 /**
  * Game constructor
@@ -53,6 +58,11 @@ var Game = function() {
 	 * @type {Timer}
 	 */
 	this.timer = new Timer();
+
+	/**
+	 * @type {Keyboard}
+	 */
+	this.keyboard = new Keyboard();
 
 	/**
 	 * @type {PIXI.Renderer}
@@ -125,6 +135,10 @@ Game.prototype = {
 		// NOTE: this can be done in a factory.
 		var chair = Chair.create(this, 3, 3);
 		this.map.addEntity(chair);
+
+		// NOTE: this can be done in a factory.
+		var character = Character.create(this, 1, 1);
+		this.map.addEntity(character);
 
 		this.world.addChild(this.map.entities);
 	},

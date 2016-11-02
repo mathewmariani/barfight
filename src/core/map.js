@@ -28,8 +28,14 @@ var Map = function(game, x, y, w, h) {
 	 */
 	this.game = game;
 
+	/**
+	 * @type {Number}
+	 */
 	this.tilesize = game.settings.tilesize;
 
+	/**
+	 * @type {Rectangle}
+	 */
 	this.rectangle = new Rectangle(
 		this.x, this.y,
 		this.w * (game.settings.tilesize * this.game.settings.scale),
@@ -41,6 +47,10 @@ var Map = function(game, x, y, w, h) {
 	 */
 	this.nodes = [];
 
+	/**
+	 * @type {Batch}
+	 * NOTE: this should be removed eventually
+	 */
 	this.entities = new Batch();
 };
 
