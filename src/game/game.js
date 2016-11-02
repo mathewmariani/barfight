@@ -123,8 +123,8 @@ Game.prototype = {
 		this.map.initialize();
 
 		// NOTE: this can be done in a factory.
-		var chair = Chair.create(this);
-		this.map.addEntity(3, 3, chair);
+		var chair = Chair.create(this, 3, 3);
+		this.map.addEntity(chair);
 
 		this.world.addChild(this.map.entities);
 	},

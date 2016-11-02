@@ -35,7 +35,8 @@ var Entity = function(game, name) {
 
 Entity.prototype = {
 	addComponent: function(component) {
-			this.components[component.name] = component;
+		this.components[component.name] = component;
+		return this.components[component.name];
 	},
 
 	removeComponent: function(component) {
@@ -44,6 +45,10 @@ Entity.prototype = {
 
 	getComponent: function(name) {
 		return this.components[name];
+	},
+
+	hasComponent: function(name) {
+		return (this.components[name] !== undefined);
 	}
 };
 

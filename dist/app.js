@@ -62,7 +62,7 @@ Camera.prototype = {
 
 module.exports = Camera;
 
-},{"../math/rectangle.js":16,"../math/vector2.js":17}],3:[function(require,module,exports){
+},{"../math/rectangle.js":17,"../math/vector2.js":18}],3:[function(require,module,exports){
 'use strict';
 
 /**
@@ -100,7 +100,8 @@ var Entity = function(game, name) {
 
 Entity.prototype = {
 	addComponent: function(component) {
-			this.components[component.name] = component;
+		this.components[component.name] = component;
+		return this.components[component.name];
 	},
 
 	removeComponent: function(component) {
@@ -109,6 +110,10 @@ Entity.prototype = {
 
 	getComponent: function(name) {
 		return this.components[name];
+	},
+
+	hasComponent: function(name) {
+		return (this.components[name] !== undefined);
 	}
 };
 
@@ -145,6 +150,8 @@ var Map = function(game, x, y, w, h) {
 	 */
 	this.game = game;
 
+	this.tilesize = game.settings.tilesize;
+
 	this.rectangle = new Rectangle(
 		this.x, this.y,
 		this.w * (game.settings.tilesize * this.game.settings.scale),
@@ -177,10 +184,8 @@ Map.prototype.initialize = function() {
 				tile.sprite = new PIXI.Sprite(id["pink.png"]);
 			}
 
-			// FIXME: these values shouldn't be "magic" numbers
-			// acutally, they could be; soo we'll see?
-			tile.sprite.position.x = x * this.game.settings.tilesize;
-			tile.sprite.position.y = y * this.game.settings.tilesize;
+			tile.sprite.position.x = x * this.tilesize;
+			tile.sprite.position.y = y * this.tilesize;
 			this.addChild(tile.sprite);
 
 			this.nodes[y][x] = tile;
@@ -190,11 +195,17 @@ Map.prototype.initialize = function() {
 	this.game.world.addChild(this);
 };
 
-Map.prototype.addEntity = function(x, y, entity) {
-	entity.sprite.position.x = x * 32;
-	entity.sprite.position.y = y * 32;
+Map.prototype.addEntity = function(entity) {
+	if (entity.hasComponent("position")) {
+		var x = entity.getComponent("position").x;
+		var y = entity.getComponent("position").y;
 
-	this.nodes[y][x].addEntity(entity);
+		entity.sprite.position.x = x * this.tilesize;
+		entity.sprite.position.y = y * this.tilesize;
+
+		this.nodes[y][x].addEntity(entity);
+	}
+
 	this.entities.addChild(entity.sprite);
 };
 
@@ -204,7 +215,7 @@ Map.prototype.removeEntity = function(x, y, entity) {
 
 module.exports = Map;
 
-},{"../math/rectangle.js":16,"./batch.js":1,"./tile.js":5}],5:[function(require,module,exports){
+},{"../math/rectangle.js":17,"./batch.js":1,"./tile.js":5}],5:[function(require,module,exports){
 'use strict';
 
 /**
@@ -356,11 +367,14 @@ window.addEventListener("load", initialize);
 
 module.exports = initialize;
 
-},{"./game/game.js":11}],9:[function(require,module,exports){
+},{"./game/game.js":12}],9:[function(require,module,exports){
 'use strict';
 
 var Position = function() {
   this.name = "position";
+
+  this.x = 0;
+  this.y = 0;
 };
 
 module.exports = Position;
@@ -368,14 +382,34 @@ module.exports = Position;
 },{}],10:[function(require,module,exports){
 'use strict';
 
+var Tooltip = function() {
+  this.name = "tooltip";
+
+  this.title = null;
+  this.desc = null;
+};
+
+module.exports = Tooltip;
+
+},{}],11:[function(require,module,exports){
+'use strict';
+
 var Entity = require("../../core/entity.js");
 var Position = require("../components/position.js");
+var Tooltip = require("../components/tooltip.js");
 
 var Chair = {
-	create: function(game) {
+	create: function(game, x, y) {
 
 		var entity = new Entity(game, "chair");
-    entity.addComponent(new Position());
+    var position = entity.addComponent(new Position());
+		var tooltip = entity.addComponent(new Tooltip());
+
+		position.x = x;
+		position.y = y;
+
+		tooltip.title = "Chair";
+		tooltip.desc = "Ever notice when someone throws a chair a brawl starts off?";
 
 		//Return the entity
 		return entity;
@@ -384,7 +418,7 @@ var Chair = {
 
 module.exports = Chair;
 
-},{"../../core/entity.js":3,"../components/position.js":9}],11:[function(require,module,exports){
+},{"../../core/entity.js":3,"../components/position.js":9,"../components/tooltip.js":10}],12:[function(require,module,exports){
 'use strict';
 
 var GUI = require('../gui/gui.js');
@@ -510,8 +544,8 @@ Game.prototype = {
 		this.map.initialize();
 
 		// NOTE: this can be done in a factory.
-		var chair = Chair.create(this);
-		this.map.addEntity(3, 3, chair);
+		var chair = Chair.create(this, 3, 3);
+		this.map.addEntity(chair);
 
 		this.world.addChild(this.map.entities);
 	},
@@ -546,7 +580,7 @@ Game.prototype = {
 
 module.exports = Game;
 
-},{"../core/entity.js":3,"../core/map.js":4,"../core/timer.js":6,"../core/world.js":7,"../gui/gui.js":12,"./entities/chair.js":10}],12:[function(require,module,exports){
+},{"../core/entity.js":3,"../core/map.js":4,"../core/timer.js":6,"../core/world.js":7,"../gui/gui.js":13,"./entities/chair.js":11}],13:[function(require,module,exports){
 'use strict';
 
 var Identification = require("../gui/id.js");
@@ -581,7 +615,6 @@ var GUI = function(game) {
 	 * @type {PIXI.Container}
 	 */
 	this.tooltip = null;
-
 
 	// self initialize
 	this.initialize();
@@ -640,22 +673,21 @@ GUI.prototype.mouseMove = function(mouse) {
 
 	// FIXME: this is terrible - this code has over stayed its welcome.
 	if (this.game.map.rectangle.contains(worldPos.x, worldPos.y)) {
-		if (this.game.map.nodes[this.mouse.y][this.mouse.x].entities.length === 0) {
-			this.tooltip.update("(?)");
-			return;
+		var ref = this.game.map.nodes[this.mouse.y][this.mouse.x].entities[0];
+		if (ref !== undefined && ref.hasComponent("tooltip")) {
+			this.tooltip.visible = true;
+			this.tooltip.update(ref);
+		} else {
+			this.tooltip.visible = false;
 		}
-
-		this.tooltip.update(
-			this.game.map.nodes[this.mouse.y][this.mouse.x].entities[0].name
-		);
 	} else {
-		this.tooltip.update("(?)");
+		this.tooltip.visible = false;
 	}
 },
 
 module.exports = GUI;
 
-},{"../gui/id.js":13,"../gui/mousepos.js":14,"../gui/tooltip.js":15}],13:[function(require,module,exports){
+},{"../gui/id.js":14,"../gui/mousepos.js":15,"../gui/tooltip.js":16}],14:[function(require,module,exports){
 'use strict';
 
 /**
@@ -700,7 +732,7 @@ Identification.prototype.initialize = function() {
 
 module.exports = Identification;
 
-},{}],14:[function(require,module,exports){
+},{}],15:[function(require,module,exports){
 'use strict';
 
 /**
@@ -751,7 +783,7 @@ MousePos.prototype.update = function(position) {
 
 module.exports = MousePos;
 
-},{}],15:[function(require,module,exports){
+},{}],16:[function(require,module,exports){
 'use strict';
 
 /**
@@ -784,7 +816,7 @@ Tooltip.prototype.constructor = Tooltip;
  */
 Tooltip.prototype.initialize = function() {
 	this.text = new PIXI.Text(
-		"Tooltip : ?",
+		"",
 		{
 			fontFamily: "Courier New",
 			fontSize: 12,
@@ -799,13 +831,14 @@ Tooltip.prototype.initialize = function() {
 	this.addChild(this.text);
 };
 
-Tooltip.prototype.update = function(value) {
-	this.text.text = ("Tooltip : " + value);
+Tooltip.prototype.update = function(entity) {
+	var ref = entity.getComponent("tooltip");
+	this.text.text = (ref.title + " : " + ref.desc);
 };
 
 module.exports = Tooltip;
 
-},{}],16:[function(require,module,exports){
+},{}],17:[function(require,module,exports){
 'use strict';
 
 /**
@@ -860,7 +893,7 @@ Rectangle.prototype = {
 
 module.exports = Rectangle;
 
-},{}],17:[function(require,module,exports){
+},{}],18:[function(require,module,exports){
 'use strict';
 
 /**

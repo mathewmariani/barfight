@@ -33,7 +33,6 @@ var GUI = function(game) {
 	 */
 	this.tooltip = null;
 
-
 	// self initialize
 	this.initialize();
 };
@@ -91,16 +90,15 @@ GUI.prototype.mouseMove = function(mouse) {
 
 	// FIXME: this is terrible - this code has over stayed its welcome.
 	if (this.game.map.rectangle.contains(worldPos.x, worldPos.y)) {
-		if (this.game.map.nodes[this.mouse.y][this.mouse.x].entities.length === 0) {
-			this.tooltip.update("(?)");
-			return;
+		var ref = this.game.map.nodes[this.mouse.y][this.mouse.x].entities[0];
+		if (ref !== undefined && ref.hasComponent("tooltip")) {
+			this.tooltip.visible = true;
+			this.tooltip.update(ref);
+		} else {
+			this.tooltip.visible = false;
 		}
-
-		this.tooltip.update(
-			this.game.map.nodes[this.mouse.y][this.mouse.x].entities[0].name
-		);
 	} else {
-		this.tooltip.update("(?)");
+		this.tooltip.visible = false;
 	}
 },
 

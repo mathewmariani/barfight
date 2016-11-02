@@ -28,6 +28,8 @@ var Map = function(game, x, y, w, h) {
 	 */
 	this.game = game;
 
+	this.tilesize = game.settings.tilesize;
+
 	this.rectangle = new Rectangle(
 		this.x, this.y,
 		this.w * (game.settings.tilesize * this.game.settings.scale),
@@ -60,10 +62,8 @@ Map.prototype.initialize = function() {
 				tile.sprite = new PIXI.Sprite(id["pink.png"]);
 			}
 
-			// FIXME: these values shouldn't be "magic" numbers
-			// acutally, they could be; soo we'll see?
-			tile.sprite.position.x = x * this.game.settings.tilesize;
-			tile.sprite.position.y = y * this.game.settings.tilesize;
+			tile.sprite.position.x = x * this.tilesize;
+			tile.sprite.position.y = y * this.tilesize;
 			this.addChild(tile.sprite);
 
 			this.nodes[y][x] = tile;
@@ -73,11 +73,17 @@ Map.prototype.initialize = function() {
 	this.game.world.addChild(this);
 };
 
-Map.prototype.addEntity = function(x, y, entity) {
-	entity.sprite.position.x = x * 32;
-	entity.sprite.position.y = y * 32;
+Map.prototype.addEntity = function(entity) {
+	if (entity.hasComponent("position")) {
+		var x = entity.getComponent("position").x;
+		var y = entity.getComponent("position").y;
 
-	this.nodes[y][x].addEntity(entity);
+		entity.sprite.position.x = x * this.tilesize;
+		entity.sprite.position.y = y * this.tilesize;
+
+		this.nodes[y][x].addEntity(entity);
+	}
+
 	this.entities.addChild(entity.sprite);
 };
 

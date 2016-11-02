@@ -30,7 +30,7 @@ Tooltip.prototype.constructor = Tooltip;
  */
 Tooltip.prototype.initialize = function() {
 	this.text = new PIXI.Text(
-		"Tooltip : ?",
+		"",
 		{
 			fontFamily: "Courier New",
 			fontSize: 12,
@@ -45,8 +45,9 @@ Tooltip.prototype.initialize = function() {
 	this.addChild(this.text);
 };
 
-Tooltip.prototype.update = function(value) {
-	this.text.text = ("Tooltip : " + value);
+Tooltip.prototype.update = function(entity) {
+	var ref = entity.getComponent("tooltip");
+	this.text.text = (ref.title + " : " + ref.desc);
 };
 
 module.exports = Tooltip;
